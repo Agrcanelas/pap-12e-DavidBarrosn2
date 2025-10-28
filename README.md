@@ -3,8 +3,8 @@
 # 🎓 PAP - [Título do Projeto]
 
 ## 👤 Informação do Aluno
-**Nome:** [Teu Nome Completo]  
-**Número:** [Número de Aluno]  
+**Nome:** David Barros  
+**Número:** 2
 **Curso:** Profissional de Informática - Sistemas
 **Ano Letivo:** 2025/2026 
 **Orientador:** [Nome do Professor Orientador]
