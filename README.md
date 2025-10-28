@@ -1,24 +1,27 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/ObOWU319)
 [![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=21338312&assignment_repo_type=AssignmentRepo)
-# 🎓 PAP - [Título do Projeto]
+# 🎓 PAP - AuxiHub
 
 ## 👤 Informação do Aluno
 **Nome:** David Barros  
 **Número:** 2
 **Curso:** Profissional de Informática - Sistemas
 **Ano Letivo:** 2025/2026 
-**Orientador:** [Nome do Professor Orientador]
+**Orientador:** Diana carneiro , Rosa Santo e Patricia
 
 ## 📋 Descrição do Projeto
 [Descreve brevemente o teu projeto em 2-3 frases. Exemplo:]  
-Sistema de gestão de biblioteca online que permite aos utilizadores pesquisar livros, fazer reservas e gerir o seu perfil de leitor.
+Este projecto tem como objectivo o desenvolvimento de uma aplicação web para a gestão de voluntariado.
+A plataforma será destinada a aproximar organizações sem fins lucrativos de voluntários interessados em
+participar em diferentes iniciativas sociais.
 
 ## 🎯 Objetivos Principais
-- [ ] Desenvolver um site dinâmico com base de dados
-- [ ] Implementar sistema de autenticação de utilizadores
-- [ ] Criar interface responsiva e intuitiva
-- [ ] Implementar funcionalidade CRUD completa
-- [ ] Fazer deploy da aplicação
+- [ ] Identificar as necessidades de instituições e voluntários em relação à gestão de oportunidades de voluntariado.
+- [ ] Produzir documentação clara sobre o projeto e o seu desenvolvimento.
+- [ ] Escolher tecnologias adequadas para o desenvolvimento do site (linguagens, frameworks, base de dados).
+- [ ] Implementar funcionalidades como: registo de utilizadores, publicação de oportunidades, candidaturas e histórico de participação.
+- [ ] Desenvolver uma interface gráfica intuitiva e acessível.
+- [ ] Realizar testes de usabilidade e performance.
 
 ## 🛠️ Stack Tecnológica
 
