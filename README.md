@@ -26,22 +26,19 @@ participar em diferentes iniciativas sociais.
 ## 🛠️ Stack Tecnológica
 
 ### **Frontend**
-- [ ] HTML5, CSS3, JavaScript
-- [ ] Bootstrap/Tailwind CSS [ou outro framework]
-- [ ] React/Vue.js [opcional]
+- [ ] HTML
+- [ ] CSS
 
 ### **Backend**
-- [ ] Node.js/PHP/Python [escolher um]
-- [ ] Express/Laravel/Django [framework]
-- [ ] Autenticação JWT/Sessions
+- [ ] PHP
+- [ ] xamp
 
 ### **Base de Dados**
 - [ ] MySQL/PostgreSQL
-- [ ] ORM: Sequelize/Eloquent [conforme backend]
+- [ ] ORM:xamp
 
 ### **Outras Ferramentas**
 - [ ] Git & GitHub
-- [ ] Docker [opcional]
 - [ ] VSCode
 
 ## 📁 Estrutura do Projeto
@@ -50,7 +47,6 @@ participar em diferentes iniciativas sociais.
 ## 📊 *Funcionalidades Implementadas*
 
 ### ✅ Concluídas
-- Sistema de registo e login
 - Página inicial com listagem
 - Perfil de utilizador
 ...
@@ -58,6 +54,7 @@ participar em diferentes iniciativas sociais.
 ### 🔄 Em Desenvolvimento
 - Funcionalidade de pesquisa
 - Upload de ficheiros
+- Sistema de registo e login
 ...
 
 ### 📅 Planeadas
@@ -67,10 +64,10 @@ participar em diferentes iniciativas sociais.
 
 ## 🗓️ Plano de Trabalho
 Fase	Tarefas	Prazo	Estado
-1	Planeamento e setup	DD/MM	✅
-2	Desenvolvimento backend	DD/MM	🟡
-3	Desenvolvimento frontend	DD/MM	🔴
-4	Testes e deploy	DD/MM	🔴
+1	Planeamento e setup	22/09	✅
+2	Desenvolvimento backend	22/09	🟡
+3	Desenvolvimento frontend	01/11	🔴
+4	Testes e deploy	21/12	🔴
 
 ## 📝 Relatório de Progresso
 Última Atualização: [Data]
@@ -90,7 +87,7 @@ O que foi feito desde a última atualização:
 - Protótipo - Design no Figma
 
 ## 📞 Contacto
-- Email: [teu.email@escola.com]
-- GitHub: [@teuusername]
+- Email: a10963@agrcanelas.com
+- GitHub: DavidBarrosn2
 
 
