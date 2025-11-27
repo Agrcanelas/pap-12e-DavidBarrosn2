@@ -1,0 +1,100 @@
+/* RESET & BODY */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Georgia, serif;
+    background-color: #f5f5f0;
+}
+
+/* HEADER */
+header {
+    background-color: #d4d2c8;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 2px solid #bcb9ae;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #7a8f47;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* LOGIN BOX */
+.container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 60px;
+}
+
+.login-box {
+    background-color: white;
+    width: 360px;
+    padding: 30px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.login-box h2 {
+    text-align: center;
+    color: #7a8f47;
+    margin-bottom: 20px;
+}
+
+/* FORM */
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+input[type="text"], 
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #bbb;
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #7a8f47;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #6a7f3f;
+}
+
+/* EXTRA LINKS */
+.extra-links {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.extra-links a {
+    text-decoration: none;
+    color: #7a8f47;
+}
+
+/* ERRO */
+.erro {
+    color: red;
+    margin-bottom: 10px;
+    text-align: center;
+    font-weight: bold;
+}
