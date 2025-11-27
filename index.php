@@ -21,6 +21,7 @@
       <a href="#envolva">Envolva-se</a>
       <a href="#criar-evento">Criar Evento</a>
       <a href="#eventosProjetos">Eventos</a>
+      <a href="login.php">Login</a>
     </nav>
   </header>
 
@@ -42,7 +43,8 @@ e garantindo um futuro sustentável para as próximas gerações.
 </p>
       </div>
       <div class="banner-img">
-        <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado Img Principal">
+        <img src="
+        https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado Img Principal">
       </div>
     </section>
 
@@ -143,16 +145,16 @@ e garantindo um futuro sustentável para as próximas gerações.
       let imagemHTML = '';
       if (arquivo) {
         const urlImagem = URL.createObjectURL(arquivo);
-        imagemHTML = `<img src="${urlImagem}" alt="${nome}" class="evento-img">`;
+        imagemHTML = <img src="${urlImagem}" alt="${nome}" class="evento-img">;
       }
 
       // Conteúdo do cartão
-      div.innerHTML = `
+      div.innerHTML = 
          <center><h4>${nome}</h4>
          ${imagemHTML}
           <p><strong>Data:</strong> ${data}          <strong>Local:</strong> ${local}</p>
          <p><strong>Descrição:</strong> ${descricao}</p></center>
-      `;
+      ;
 
       // Adiciona o novo evento à secção de eventos
       containerEventos.appendChild(div);
