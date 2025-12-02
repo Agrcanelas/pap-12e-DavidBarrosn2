@@ -13,10 +13,8 @@
   <!-- Cabeçalho do site com o menu de navegação -->
   <header>
     <nav>
-      <a href="#" class="active">Página inicial</a>
       <a href="#sobre">Sobre</a>
       <a href="#projeto">Projetos</a>
-      
       <a href="#doacoes">Doações</a>
       <a href="#envolva">Envolva-se</a>
       <a href="#criar-evento">Criar Evento</a>
@@ -34,17 +32,15 @@
     <!-- Banner principal com texto e imagem -->
     <section class="banner">
       <div class="banner-text">
-    <p>
-  <strong>
-    Junte-se ao meu movimento de voluntariado ambiental!</strong><br>
- Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
-Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje 
-e garantindo um futuro sustentável para as próximas gerações.
-</p>
+        <p>
+          <strong>Junte-se ao meu movimento de voluntariado ambiental!</strong><br>
+          Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
+          Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje 
+          e garantindo um futuro sustentável para as próximas gerações.
+        </p>
       </div>
       <div class="banner-img">
-        <img src="
-        https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado Img Principal">
+        <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado Img Principal">
       </div>
     </section>
 
@@ -114,7 +110,7 @@ e garantindo um futuro sustentável para as próximas gerações.
 
   <!-- Rodapé com direitos reservados -->
   <footer>
-    © 2025 por Salve o Planeta. Orgulhosamente criado em HTML.
+    © 2025 por David B.Criado em HTML.
   </footer>
 
   <!-- Script JavaScript para adicionar novos eventos -->
@@ -145,16 +141,18 @@ e garantindo um futuro sustentável para as próximas gerações.
       let imagemHTML = '';
       if (arquivo) {
         const urlImagem = URL.createObjectURL(arquivo);
-        imagemHTML = <img src="${urlImagem}" alt="${nome}" class="evento-img">;
+        imagemHTML = `<img src="${urlImagem}" alt="${nome}" class="evento-img">`;
       }
 
       // Conteúdo do cartão
-      div.innerHTML = 
-         <center><h4>${nome}</h4>
-         ${imagemHTML}
-          <p><strong>Data:</strong> ${data}          <strong>Local:</strong> ${local}</p>
-         <p><strong>Descrição:</strong> ${descricao}</p></center>
-      ;
+      div.innerHTML = `
+        <center>
+          <h4>${nome}</h4>
+          ${imagemHTML}
+          <p><strong>Data:</strong> ${data} <strong>Local:</strong> ${local}</p>
+          <p><strong>Descrição:</strong> ${descricao}</p>
+        </center>
+      `;
 
       // Adiciona o novo evento à secção de eventos
       containerEventos.appendChild(div);
