@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
 
     // Conexão BD
-    $dsn = "mysql:host=localhost;dbname=humani_care;charset=utf8mb4";
+    $dsn = "mysql:host=localhost;dbname=humanicare;charset=utf8mb4";
     $db_user = "root";
     $db_pass = ""; // altera se necessário
 
@@ -64,10 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="nome">Nome</label>
             <input type="text" id="nome" name="nome" required>
 
-            <label for="email">Email:</label>
+            <label for="email">Email</label>
             <input type="text" id="email" name="email" required>
 
-            <label for="password">Palavra-passe:</label>
+            <label for="password">Palavra-passe</label>
             <input type="password" id="password" name="password" required>
 
             <button type="submit">Entrar</button>
