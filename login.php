@@ -44,17 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Humani Care</title>
-    <link rel="stylesheet" href="stylelogin.css?v=2"> <!-- Evita cache -->
+    <link rel="stylesheet" href="stylelogin.css?v=3">
 </head>
 <body>
 <header>
     <nav>
-        <a href="#sobre">Sobre</a>
-        <a href="#projeto">Projetos</a>
-        <a href="#doacoes">Doações</a>
-        <a href="#envolva">Envolva-se</a>
-        <a href="#criar-evento">Criar Evento</a>
-        <a href="#eventosProjetos">Eventos</a>
+        <a href="#sobre" class="login-required">Sobre</a>
+        <a href="#projeto" class="login-required">Projetos</a>
+        <a href="#doacoes" class="login-required">Doações</a>
+        <a href="#envolva" class="login-required">Envolva-se</a>
+        <a href="#criar-evento" class="login-required">Criar Evento</a>
+        <a href="#eventosProjetos" class="login-required">Eventos</a>
         <a href="login.php">Login</a>
     </nav>
 </header>
@@ -87,5 +87,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const loginRequiredLinks = document.querySelectorAll(".login-required");
+
+    loginRequiredLinks.forEach(link => {
+        link.addEventListener("click", function(e) {
+            e.preventDefault(); // impede navegação
+            alert("Primeiro tem que fazer login!");
+        });
+    });
+});
+</script>
+
 </body>
 </html>
