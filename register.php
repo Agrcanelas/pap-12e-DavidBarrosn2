@@ -14,20 +14,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = new PDO($dsn, $db_user, $db_pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $stmt = $pdo->prepare("SELECT * FROM utilizador WHERE nome = :nome AND email = :email");
-        $stmt->execute(['nome' => $nome, 'email' => $email]);
+        $stmt = $pdo->prepare("SELECT * FROM utilizador WHERE email = :email");
+        $stmt->execute(['email' => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user) {
-            if ($password === $user['senha']) {
-                $_SESSION['user'] = $user;
-                header("Location: index.php");
-                exit;
-            } else {
-                $erro = "Palavra-passe incorreta.";
-            }
+            $erro = "Já existe um utilizador com este email.";
         } else {
-            header("Location: register.php");
+            $stmt = $pdo->prepare("INSERT INTO utilizador (nome, email, senha) VALUES (:nome, :email, :senha)");
+            $stmt->execute([
+                'nome' => $nome,
+                'email' => $email,
+                'senha' => $password
+            ]);
+            $_SESSION['user'] = [
+                'nome' => $nome,
+                'email' => $email
+            ];
+            header("Location: index.php");
             exit;
         }
     } catch (PDOException $e) {
@@ -41,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - Humani Care</title>
+<title>Register - Humani Care</title>
 <link rel="stylesheet" href="stylelogin.css?v=4">
 </head>
 <body>
@@ -61,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <h1 class="logo">HUMANI <span>CARE</span></h1>
 
 <div class="login-box">
-<h2>Login</h2>
+<h2>Criar Conta</h2>
 
 <?php if (!empty($erro)) echo "<p class='erro'>$erro</p>"; ?>
 
@@ -75,18 +79,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label for="password">Palavra-passe</label>
     <input type="password" id="password" name="password" required>
 
-    <button type="submit">Entrar</button>
+    <button type="submit">Registar</button>
 </form>
 
 <div class="extra-links">
-    <p><a href="#">Esqueceu a palavra-passe?</a></p>
-    <p><a href="register.php">Criar nova conta</a></p>
+    <p><a href="login.php">Já tem conta? Faça login</a></p>
 </div>
 </div>
 </main>
 
 <script>
-// Passa estado de login do PHP para JS
 const isLoggedIn = <?php echo isset($_SESSION['user']) ? 'true' : 'false'; ?>;
 
 document.addEventListener("DOMContentLoaded", function() {
