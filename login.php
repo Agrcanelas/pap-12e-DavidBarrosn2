@@ -15,13 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = new PDO($dsn, $db_user, $db_pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        // Verifica utilizador pelo nome + email (tabela correta!)
+        // Verifica utilizador pelo nome + email
         $stmt = $pdo->prepare("SELECT * FROM utilizador WHERE nome = :nome AND email = :email");
         $stmt->execute(['nome' => $nome, 'email' => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user) {
-            // Verifica password simples (porque BD não usa hash)
             if ($password === $user['senha']) {
                 $_SESSION['user'] = $user;
                 header("Location: index.php");
@@ -30,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $erro = "Palavra-passe incorreta.";
             }
         } else {
-            // Não existe → Criar conta
             header("Location: register.php");
             exit;
         }
@@ -46,18 +44,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Humani Care</title>
-    <link rel="stylesheet" href="stylelogin.css">
+    <link rel="stylesheet" href="stylelogin.css?v=2"> <!-- Evita cache -->
 </head>
 <body>
 <header>
-    <h1>HUMANI CARE</h1>
+    <nav>
+        <a href="#sobre">Sobre</a>
+        <a href="#projeto">Projetos</a>
+        <a href="#doacoes">Doações</a>
+        <a href="#envolva">Envolva-se</a>
+        <a href="#criar-evento">Criar Evento</a>
+        <a href="#eventosProjetos">Eventos</a>
+        <a href="login.php">Login</a>
+    </nav>
 </header>
 
-<div class="container">
+<main class="container">
+    <!-- Título principal (logo do site) -->
+    <h1 class="logo">HUMANI <span>CARE</span></h1>
+
     <div class="login-box">
         <h2>Login</h2>
 
-        <!-- Exibe erro se existir -->
         <?php if (!empty($erro)) echo "<p class='erro'>$erro</p>"; ?>
 
         <form method="POST" action="">
@@ -78,6 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p><a href="register.php">Criar nova conta</a></p>
         </div>
     </div>
-</div>
+</main>
 </body>
 </html>
