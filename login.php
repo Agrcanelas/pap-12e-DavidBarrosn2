@@ -79,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </form>
 
 <div class="extra-links">
-    <p><a href="#">Esqueceu a palavra-passe?</a></p>
     <p><a href="register.php">Criar nova conta</a></p>
 </div>
 </div>
