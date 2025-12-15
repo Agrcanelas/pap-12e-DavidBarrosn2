@@ -19,16 +19,28 @@ header {
   padding: 0 20px;
 }
 
+/* Nav com utilizador à esquerda e links à direita */
 nav {
   display: flex;
-  justify-content: center;
-  gap: 20px;
-  padding: 10px 0;
-  border-bottom: 1px solid #d2c7b6;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
   background: #dcd3c1;
+  border-bottom: 1px solid #d2c7b6;
 }
 
-nav a {
+.usuario-logado {
+  font-weight: bold;
+  color: #58b79d;
+  font-size: 16px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
   text-decoration: none;
   color: #4a4a4a;
   font-weight: bold;
@@ -37,8 +49,8 @@ nav a {
   transition: background 0.3s ease;
 }
 
-nav a.active,
-nav a:hover {
+.nav-links a:hover,
+.nav-links a.active {
   background-color: #58b79d;
   color: white;
 }
@@ -189,7 +201,6 @@ h1.logo {
   text-align: center;
 }
 
-/* Cartões criados dinamicamente */
 .evento-card {
   background: white;
   padding: 18px;
@@ -216,7 +227,6 @@ h1.logo {
   line-height: 1.4;
 }
 
-/* Imagem do evento dentro do cartão */
 .evento-img {
   width: 100%;
   height: 150px;
@@ -243,5 +253,15 @@ footer {
 
   #eventosProjetos {
     grid-template-columns: 1fr;
+  }
+
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    gap: 10px;
+    margin-top: 10px;
   }
 }
