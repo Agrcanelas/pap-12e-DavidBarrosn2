@@ -119,7 +119,7 @@ session_start();
 
   <!-- Rodapé -->
   <footer>
-    © 2025 por David B.Criado em HTML.
+    © 2025 Site criado por David B.Criado em HTML.
   </footer>
 
   <!-- Script JavaScript -->
