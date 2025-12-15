@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <header>
 <nav>
+    <a href="indexdeslogado.php">Pagina principal</a>
     <a href="#sobre" class="login-required">Sobre</a>
     <a href="#projeto" class="login-required">Projetos</a>
     <a href="#doacoes" class="login-required">Doações</a>
