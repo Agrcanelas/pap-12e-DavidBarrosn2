@@ -3,64 +3,70 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 27-Nov-2025 às 13:54
--- Versão do servidor: 10.4.32-MariaDB
--- versão do PHP: 8.2.12
+-- Tempo de geração: 27-Nov-2025
+-- Servidor: MariaDB 10.4.32
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Banco de dados: `humanicare`
---
-
+-- --------------------------------------------------------
+-- Base de dados: `humanicare`
 -- --------------------------------------------------------
 
---
--- Estrutura da tabela `utilizador`
---
+CREATE DATABASE IF NOT EXISTS `humanicare`
+  DEFAULT CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
+
+USE `humanicare`;
+
+-- --------------------------------------------------------
+-- Tabela: utilizador
+-- --------------------------------------------------------
 
 CREATE TABLE `utilizador` (
-  `utilizador_id` int(11) NOT NULL,
-  `nome` varchar(200) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `senha` varchar(20) NOT NULL,
-  `data_registo` date NOT NULL
+  `utilizador_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(200) NOT NULL,
+  `email` VARCHAR(100) NOT NULL,
+  `senha` VARCHAR(20) NOT NULL,
+  `data_registo` DATE NOT NULL,
+  PRIMARY KEY (`utilizador_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Extraindo dados da tabela `utilizador`
---
+-- --------------------------------------------------------
+-- Dados iniciais da tabela utilizador
+-- --------------------------------------------------------
 
 INSERT INTO `utilizador` (`utilizador_id`, `nome`, `email`, `senha`, `data_registo`) VALUES
 (1, 'ze', 'ze@gmail.com', '1234', '2025-11-02');
 
---
--- Índices para tabelas despejadas
---
+-- --------------------------------------------------------
+-- Tabela: evento
+-- --------------------------------------------------------
 
---
--- Índices para tabela `utilizador`
---
-ALTER TABLE `utilizador`
-  ADD PRIMARY KEY (`utilizador_id`);
+CREATE TABLE `evento` (
+  `evento_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(200) NOT NULL,
+  `descricao` TEXT NOT NULL,
+  `data_evento` DATE NOT NULL,
+  `local_evento` VARCHAR(200) NOT NULL,
+  `imagem` VARCHAR(255) DEFAULT NULL,
+  `utilizador_id` INT(11) NOT NULL,
+  `data_criacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`evento_id`),
+  KEY `fk_evento_utilizador` (`utilizador_id`),
+  CONSTRAINT `fk_evento_utilizador`
+    FOREIGN KEY (`utilizador_id`)
+    REFERENCES `utilizador` (`utilizador_id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- AUTO_INCREMENT de tabelas despejadas
---
-
---
--- AUTO_INCREMENT de tabela `utilizador`
---
-ALTER TABLE `utilizador`
-  MODIFY `utilizador_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
