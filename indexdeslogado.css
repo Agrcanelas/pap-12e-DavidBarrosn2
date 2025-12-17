@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-// Simulação: utilizador deslogado
-unset($_SESSION['user']); // garante que está deslogado
+// Garante que o utilizador está deslogado
+unset($_SESSION['user']);
 
-// Inicializar array de eventos se não existir
+// Inicializa array de eventos se não existir
 if(!isset($_SESSION['eventos'])) {
     $_SESSION['eventos'] = [];
 }
@@ -19,38 +19,42 @@ if(!isset($_SESSION['eventos'])) {
 </head>
 <body>
 
+<!-- Cabeçalho unificado -->
 <header>
-  <div class="header-inner">
-    <h1 class="logo">HUMANI <span>CARE</span></h1>
-
-    <nav>
-      <!-- sem utilizador porque está deslogado -->
-      <div class="nav-links">
-        <a href="#sobre">Sobre</a>
-        <a href="#projeto">Projetos</a>
-        <a href="#doacoes">Doações</a>
-        <a href="#envolva">Envolva-se</a>
-        <a href="#criar-evento">Criar Evento</a>
-        <a href="#eventosProjetos">Eventos</a>
-        <a href="login.php">Login</a>
-      </div>
-    </nav>
-  </div>
+  <nav>
+    <div class="nav-links">
+      <a href="#sobre">Sobre</a>
+      <a href="#projeto">Projetos</a>
+      <a href="#doacoes">Doações</a>
+      <a href="#envolva">Envolva-se</a>
+      <a href="#criar-evento">Criar Evento</a>
+      <a href="#eventosProjetos">Eventos</a>
+      <a href="login.php">Login</a>
+    </div>
+  </nav>
 </header>
 
 <main class="container">
+
+  <!-- Logo principal -->
+  <h1 class="logo">HUMANI <span>CARE</span></h1>
+
+  <!-- Banner principal -->
   <section class="banner">
     <div class="banner-text">
-      <p><strong>Junte-se ao meu movimento de voluntariado ambiental!</strong><br>
-      Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
-      Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje 
-      e garantindo um futuro sustentável para as próximas gerações.</p>
+      <p>
+        <strong>Junte-se ao meu movimento de voluntariado ambiental!</strong><br>
+        Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
+        Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje 
+        e garantindo um futuro sustentável para as próximas gerações.
+      </p>
     </div>
     <div class="banner-img">
       <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado Img Principal">
     </div>
   </section>
 
+  <!-- Secção de cartões -->
   <section class="grid">
     <div class="card" id="sobre">
       <h3>Sobre</h3>
@@ -74,11 +78,13 @@ if(!isset($_SESSION['eventos'])) {
     </div>
   </section>
 
+  <!-- Secção Criar Evento -->
   <section id="criar-evento">
     <h3>Login Necessário</h3>
     <p>Para criar um evento, por favor <a href="login.php">faça login</a>.</p>
   </section>
 
+  <!-- Secção Eventos Criados -->
   <section id="eventosProjetos">
     <h3 class="titulo-eventos">Eventos Criados</h3>
     <?php foreach($_SESSION['eventos'] as $evento): ?>
@@ -101,10 +107,11 @@ if(!isset($_SESSION['eventos'])) {
   © 2025 por David B. Criado em PHP.
 </footer>
 
+<!-- Script Participar -->
 <script>
 document.querySelectorAll('.participar-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const contador = btn.parentElement.querySelector('.contador');
+    const contador = btn.nextElementSibling.querySelector('.contador');
     contador.textContent = parseInt(contador.textContent) + 1;
   });
 });
