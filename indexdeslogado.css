@@ -1,0 +1,55 @@
+/* ---------- ESTILO GERAL DO SITE ---------- */
+body {
+  margin: 0;
+  font-family: 'Georgia', serif;
+  background-color: #f4f1ec;
+  background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+  color: #333;
+}
+
+/* ---------- CABEÇALHO E NAVEGAÇÃO ---------- */
+header {
+  background: #e9e3d9;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  padding: 10px 0;
+}
+
+header h1.logo {
+  color: #7c8a3f;
+  font-size: 48px;
+  margin: 0 0 10px 0;
+  letter-spacing: 2px;
+}
+
+header h1.logo span {
+  color: #9dbb52;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+  background: #dcd3c1;
+  border-bottom: 1px solid #d2c7b6;
+}
+
+nav a {
+  text-decoration: none;
+  color: #4a4a4a;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+nav a:hover,
+nav a.active {
+  background-color: #58b79d;
+  color: white;
+}
+
+/* ---------- RESTANTE CSS ---------- */
+/* Mantém o CSS do banner, cartões, criar evento e eventos já passado antes */

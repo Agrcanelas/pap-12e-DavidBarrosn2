@@ -1,5 +1,13 @@
 <?php
 session_start();
+
+// Simulação: utilizador deslogado
+$_SESSION['usuario'] = null;
+
+// Inicializar array de eventos se não existir
+if(!isset($_SESSION['eventos'])) {
+    $_SESSION['eventos'] = [];
+}
 ?>
 <!doctype html>
 <html lang="pt-PT">
@@ -12,6 +20,7 @@ session_start();
 <body>
 
 <header>
+  <h1 class="logo">HUMANI <span>CARE</span></h1>
   <nav>
     <a href="#sobre">Sobre</a>
     <a href="#projeto">Projetos</a>
@@ -24,8 +33,6 @@ session_start();
 </header>
 
 <main class="container">
-  <h1 class="logo">HUMANI <span>CARE</span></h1>
-
   <section class="banner">
     <div class="banner-text">
       <p><strong>Junte-se ao meu movimento de voluntariado ambiental!</strong><br>
@@ -46,17 +53,17 @@ session_start();
     </div>
     <div class="card" id="projeto">
       <h3>Projeto</h3>
-      <p>Desenvolvo este projetos de voluntariado com a intensado de ajudar que mais necessita.</p>
+      <p>Desenvolvo este projeto de voluntariado com a intenção de ajudar quem mais necessita.</p>
       <a href="#" class="link-mais">Mais</a>
     </div>
     <div class="card" id="doacoes">
       <h3>Doações</h3>
-      <p>A sua doação ajudame a continuar o meu trabalho. Cada doação ajuda este website a melhorar.</p>
+      <p>A sua doação ajuda-me a continuar o meu trabalho. Cada doação ajuda este website a melhorar.</p>
       <a href="#" class="link-mais">Mais</a>
     </div>
     <div class="card" id="envolva">
       <h3>Envolva-se</h3>
-      <p>Participe em atividades, crie eventos que pense que ajudem a comunidade e o planeta.</p>
+      <p>Participe em atividades, crie eventos que ajudem a comunidade e o planeta.</p>
       <a href="#" class="link-mais">Mais</a>
     </div>
   </section>
@@ -68,47 +75,33 @@ session_start();
 
   <section id="eventosProjetos">
     <h3 class="titulo-eventos">Eventos Criados</h3>
+    <?php foreach($_SESSION['eventos'] as $evento): ?>
+      <div class="evento-card">
+        <h4><?php echo $evento['nome']; ?></h4>
+        <?php if($evento['imagem']): ?>
+          <img src="<?php echo $evento['imagem']; ?>" alt="<?php echo $evento['nome']; ?>" class="evento-img">
+        <?php endif; ?>
+        <p><strong>Data:</strong> <?php echo $evento['data']; ?> <strong>Local:</strong> <?php echo $evento['local']; ?></p>
+        <p><strong>Descrição:</strong> <?php echo $evento['descricao']; ?></p>
+        <button class="participar-btn">Participar</button>
+        <p>Pessoas a participar: <span class="contador">0</span></p>
+      </div>
+    <?php endforeach; ?>
   </section>
 
 </main>
 
 <footer>
-  © 2025 por David B.Criado em HTML.
+  © 2025 por David B. Criado em PHP.
 </footer>
 
 <script>
-const containerEventos = document.getElementById('eventosProjetos');
-
-function criarEvento(nome, descricao, data, local, arquivo) {
-  const div = document.createElement('div');
-  div.classList.add('evento-card');
-
-  let imagemHTML = '';
-  if (arquivo) {
-    const urlImagem = URL.createObjectURL(arquivo);
-    imagemHTML = `<img src="${urlImagem}" alt="${nome}" class="evento-img">`;
-  }
-
-  div.innerHTML = `
-    <center>
-      <h4>${nome}</h4>
-      ${imagemHTML}
-      <p><strong>Data:</strong> ${data} <strong>Local:</strong> ${local}</p>
-      <p><strong>Descrição:</strong> ${descricao}</p>
-      <button class="participar-btn">Participar</button>
-      <p>Pessoas a participar: <span class="contador">0</span></p>
-    </center>
-  `;
-
-  const btn = div.querySelector('.participar-btn');
-  const contador = div.querySelector('.contador');
-
+document.querySelectorAll('.participar-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    const contador = btn.nextElementSibling.querySelector('.contador');
     contador.textContent = parseInt(contador.textContent) + 1;
   });
-
-  containerEventos.appendChild(div);
-}
+});
 </script>
 
 </body>
