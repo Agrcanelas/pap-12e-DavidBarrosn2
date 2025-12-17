@@ -1,4 +1,3 @@
-/* RESET & BODY */
 body {
     margin: 0;
     padding: 0;
@@ -6,7 +5,6 @@ body {
     background-color: #f5f5f0;
 }
 
-/* ---------- CABEÇALHO E NAVEGAÇÃO ---------- */
 header {
     background: #e9e3d9;
     border-bottom: 1px solid #ccc;
@@ -36,7 +34,6 @@ nav a.active {
     color: white;
 }
 
-/* ---------- TÍTULO PRINCIPAL ---------- */
 h1.logo {
     text-align: center;
     color: #7c8a3f;
@@ -49,7 +46,6 @@ h1.logo span {
     color: #9dbb52;
 }
 
-/* ---------- LOGIN BOX ---------- */
 .container {
     width: 100%;
     display: flex;
@@ -75,7 +71,6 @@ h1.logo span {
     margin-bottom: 20px;
 }
 
-/* ---------- FORM ---------- */
 label {
     display: block;
     margin-top: 10px;
@@ -92,7 +87,6 @@ input[type="password"] {
     font-size: 16px;
 }
 
-/* ---------- BUTTON ---------- */
 button {
     width: 100%;
     padding: 12px;
@@ -111,7 +105,6 @@ button:hover {
     transform: scale(1.03);
 }
 
-/* ---------- EXTRA LINKS ---------- */
 .extra-links {
     text-align: center;
     margin-top: 15px;
@@ -123,7 +116,6 @@ button:hover {
     font-weight: bold;
 }
 
-/* ---------- ERRO ---------- */
 .erro {
     color: red;
     margin-bottom: 10px;
@@ -131,7 +123,6 @@ button:hover {
     font-weight: bold;
 }
 
-/* ---------- RESPONSIVIDADE ---------- */
 @media(max-width: 500px) {
     h1.logo {
         font-size: 36px;

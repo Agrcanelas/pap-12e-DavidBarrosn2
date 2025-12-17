@@ -35,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -47,14 +46,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <header>
 <nav>
-    <a href="indexdeslogado.php">Pagina principal</a>
+    <a href="indexdeslogado.php">Página principal</a>
     <a href="#sobre" class="login-required">Sobre</a>
     <a href="#projeto" class="login-required">Projetos</a>
     <a href="#doacoes" class="login-required">Doações</a>
     <a href="#envolva" class="login-required">Envolva-se</a>
     <a href="#criar-evento" class="login-required">Criar Evento</a>
     <a href="#eventosProjetos" class="login-required">Eventos</a>
-    <a href="login.php">Login</a>
 </nav>
 </header>
 
@@ -86,7 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 <script>
-// Passa estado de login do PHP para JS
 const isLoggedIn = <?php echo isset($_SESSION['user']) ? 'true' : 'false'; ?>;
 
 document.addEventListener("DOMContentLoaded", function() {
