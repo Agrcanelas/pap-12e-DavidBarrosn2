@@ -1,11 +1,11 @@
 <?php
 session_start();
 
-// Garante que o utilizador está deslogado
-unset($_SESSION['user']);
+// ❌ REMOVIDO: logout automático
+// unset($_SESSION['user']);
 
-// Inicializa array de eventos se não existir
-if(!isset($_SESSION['eventos'])) {
+// Inicializa array de eventos se não existir ou se não for array
+if (!isset($_SESSION['eventos']) || !is_array($_SESSION['eventos'])) {
     $_SESSION['eventos'] = [];
 }
 ?>
@@ -87,18 +87,29 @@ if(!isset($_SESSION['eventos'])) {
   <!-- Secção Eventos Criados -->
   <section id="eventosProjetos">
     <h3 class="titulo-eventos">Eventos Criados</h3>
-    <?php foreach($_SESSION['eventos'] as $evento): ?>
-      <div class="evento-card">
-        <h4><?php echo htmlspecialchars($evento['nome']); ?></h4>
-        <?php if(!empty($evento['imagem'])): ?>
-          <img src="<?php echo htmlspecialchars($evento['imagem']); ?>" alt="<?php echo htmlspecialchars($evento['nome']); ?>" class="evento-img">
-        <?php endif; ?>
-        <p><strong>Data:</strong> <?php echo htmlspecialchars($evento['data']); ?> <strong>Local:</strong> <?php echo htmlspecialchars($evento['local']); ?></p>
-        <p><strong>Descrição:</strong> <?php echo htmlspecialchars($evento['descricao']); ?></p>
-        <button class="participar-btn">Participar</button>
-        <p>Pessoas a participar: <span class="contador">0</span></p>
-      </div>
-    <?php endforeach; ?>
+
+    <?php if (!empty($_SESSION['eventos'])): ?>
+      <?php foreach ($_SESSION['eventos'] as $evento): ?>
+        <div class="evento-card">
+          <h4><?php echo htmlspecialchars($evento['nome']); ?></h4>
+
+          <?php if (!empty($evento['imagem'])): ?>
+            <img src="<?php echo htmlspecialchars($evento['imagem']); ?>" alt="<?php echo htmlspecialchars($evento['nome']); ?>" class="evento-img">
+          <?php endif; ?>
+
+          <p>
+            <strong>Data:</strong> <?php echo htmlspecialchars($evento['data']); ?>
+            <strong>Local:</strong> <?php echo htmlspecialchars($evento['local']); ?>
+          </p>
+
+          <p><strong>Descrição:</strong> <?php echo htmlspecialchars($evento['descricao']); ?></p>
+
+          <button class="participar-btn">Participar</button>
+          <p>Pessoas a participar: <span class="contador">0</span></p>
+        </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+
   </section>
 
 </main>
