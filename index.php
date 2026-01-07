@@ -12,10 +12,8 @@ session_start();
 <body>
 <header>
   <div class="header-inner">
-        <?php if(isset($_SESSION['user'])): ?>
-      <div class="usuario-logado">
-        Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?>
-      </div>
+    <?php if(isset($_SESSION['user'])): ?>
+      <span class="usuario-logado">Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></span>
     <?php endif; ?>
     <h1 class="logo">HUMANI <span>CARE</span></h1>
     <nav class="nav-links">
@@ -26,6 +24,7 @@ session_start();
       <a href="#criar-evento">Criar Evento</a>
       <a href="#eventosProjetos">Eventos</a>
       <a href="login.php">Login</a>
+       <a href="indexdeslogado.php">Sair</a>
     </nav>
   </div>
 </header>

@@ -12,34 +12,51 @@ body {
   margin: 0 auto;
   padding: 0 20px;
 }
-
-/* ---------- CABEÇALHO E NAVEGAÇÃO ---------- */
 header {
   background: #e9e3d9;
   border-bottom: 1px solid #ccc;
 }
 
-/* HEADER CENTRALIZADO E GRANDE */
 .header-inner {
   display: flex;
-  flex-direction: column;  /* empilha logo e menu verticalmente */
-  align-items: center;     /* centra horizontalmente */
-  padding: 30px 0;         /* aumenta altura do header */
-  gap: 20px;               /* espaço entre logo e menu */
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
 }
 
+/* utilizador à esquerda */
+.usuario-logado {
+  font-weight: bold;
+  color: #58b79d;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+/* logo no centro */
 h1.logo {
-  font-size: 60px;         /* logo grande */
-  text-align: center;
+  font-size: 48px;
+  margin: 0;
 }
 
+/* menu à direita */
 .nav-links {
   display: flex;
-  gap: 20px;               /* espaço entre os links do menu */
-  flex-wrap: wrap;          /* faz wrap em telas pequenas */
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
+.nav-links a {
+  text-decoration: none;
+  color: #4a4a4a;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
 
+.nav-links a:hover {
+  background-color: #58b79d;
+  color: white;
+}
 .logo span {
   color: #9dbb52;
 }
@@ -49,12 +66,6 @@ nav {
   justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
-}
-
-.usuario-logado {
-  font-weight: bold;
-  color: #58b79d;
-  font-size: 16px;
 }
 
 .nav-links a {
