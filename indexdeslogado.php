@@ -15,20 +15,27 @@ if(!isset($_SESSION['eventos'])) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>HumaniCare</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="indexdeslogado.css">
 </head>
 <body>
 
 <header>
   <h1 class="logo">HUMANI <span>CARE</span></h1>
   <nav>
-    <a href="#sobre">Sobre</a>
-    <a href="#projeto">Projetos</a>
-    <a href="#doacoes">Doações</a>
-    <a href="#envolva">Envolva-se</a>
-    <a href="#criar-evento">Criar Evento</a>
-    <a href="#eventosProjetos">Eventos</a>
-    <a href="login.php">Login</a>
+    <header>
+  <div class="header-inner">
+    <nav class="nav-links">
+      <a href="#sobre">Sobre</a>
+      <a href="#projeto">Projetos</a>
+      <a href="#doacoes">Doações</a>
+      <a href="#envolva">Envolva-se</a>
+      <a href="#criar-evento">Criar Evento</a>
+      <a href="#eventosProjetos">Eventos</a>
+      <a href="login.php">Login</a>
+    </nav>
+  </div>
+</header>
+
   </nav>
 </header>
 
