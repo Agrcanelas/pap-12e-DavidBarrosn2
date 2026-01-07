@@ -10,11 +10,22 @@ session_start();
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<?php include 'menu.php'; ?>
-
+<header>
+  <div class="header-inner">
+    <h1 class="logo">HUMANI <span>CARE</span></h1>
+    <nav class="nav-links">
+      <a href="#sobre">Sobre</a>
+      <a href="#projeto">Projetos</a>
+      <a href="#doacoes">Doações</a>
+      <a href="#envolva">Envolva-se</a>
+      <a href="#criar-evento">Criar Evento</a>
+      <a href="#eventosProjetos">Eventos</a>
+      <a href="login.php">Login</a>
+    </nav>
+  </div>
+</header>
 <main class="container">
-  <h1 class="logo">HUMANI <span>CARE</span></h1>
+
 
   <section class="banner">
     <div class="banner-text">

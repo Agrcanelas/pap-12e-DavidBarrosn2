@@ -19,21 +19,26 @@ header {
   border-bottom: 1px solid #ccc;
 }
 
+/* HEADER CENTRALIZADO E GRANDE */
 .header-inner {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  flex-wrap: wrap;
+  flex-direction: column;  /* empilha logo e menu verticalmente */
+  align-items: center;     /* centra horizontalmente */
+  padding: 30px 0;         /* aumenta altura do header */
+  gap: 20px;               /* espaço entre logo e menu */
 }
 
 h1.logo {
+  font-size: 60px;         /* logo grande */
   text-align: center;
-  color: #7c8a3f;
-  font-size: 48px;
-  margin: 0;
-  letter-spacing: 2px;
 }
+
+.nav-links {
+  display: flex;
+  gap: 20px;               /* espaço entre os links do menu */
+  flex-wrap: wrap;          /* faz wrap em telas pequenas */
+}
+
 
 .logo span {
   color: #9dbb52;
@@ -50,11 +55,6 @@ nav {
   font-weight: bold;
   color: #58b79d;
   font-size: 16px;
-}
-
-.nav-links {
-  display: flex;
-  gap: 20px;
 }
 
 .nav-links a {
