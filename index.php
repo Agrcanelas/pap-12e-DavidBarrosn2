@@ -12,6 +12,11 @@ session_start();
 <body>
 <header>
   <div class="header-inner">
+        <?php if(isset($_SESSION['user'])): ?>
+      <div class="usuario-logado">
+        Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?>
+      </div>
+    <?php endif; ?>
     <h1 class="logo">HUMANI <span>CARE</span></h1>
     <nav class="nav-links">
       <a href="#sobre">Sobre</a>
