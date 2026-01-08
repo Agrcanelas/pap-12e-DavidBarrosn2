@@ -11,20 +11,23 @@ session_start();
 </head>
 <body>
 <header>
+  <h1 class="logo">HUMANI <span>CARE</span></h1>
   <div class="header-inner">  
-    <?php if(isset($_SESSION['user'])): ?>
-    <span class="usuario-logado">Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></span>
+   <?php if(isset($_SESSION['user'])): ?>
+      <span class="usuario-logado">Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></span>
     <?php endif; ?>
-    <h1 class="logo">HUMANI <span>CARE</span></h1>
-    <nav class="nav-links">
+    <div class="nav-links">
       <a href="#sobre">Sobre</a>
       <a href="#projeto">Projetos</a>
       <a href="#doacoes">Doações</a>
       <a href="#envolva">Envolva-se</a>
       <a href="#criar-evento">Criar Evento</a>
       <a href="#eventosProjetos">Eventos</a>
-      <a href="login.php">Login</a>
-       <a href="indexdeslogado.php">Sair</a>
+      <?php if(isset($_SESSION['user'])): ?>
+        <a href="logout.php">Sair</a>
+      <?php else: ?>
+        <a href="login.php">Login</a>
+      <?php endif; ?>
     </nav>
   </div>
 </header>
