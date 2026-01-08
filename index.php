@@ -11,9 +11,9 @@ session_start();
 </head>
 <body>
 <header>
-  <div class="header-inner">
+  <div class="header-inner">  
     <?php if(isset($_SESSION['user'])): ?>
-      <span class="usuario-logado">Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></span>
+    <span class="usuario-logado">Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></span>
     <?php endif; ?>
     <h1 class="logo">HUMANI <span>CARE</span></h1>
     <nav class="nav-links">
@@ -90,7 +90,7 @@ session_start();
 
         <button type="submit">Criar Evento</button>
       </form>
-      <p>Está logado como: <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></p>
+      <p> <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></p>
     <?php endif; ?>
   </section>
 
