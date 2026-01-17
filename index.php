@@ -10,12 +10,14 @@ session_start();
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <header>
   <h1 class="logo">HUMANI <span>CARE</span></h1>
   <div class="header-inner">  
-   <?php if(isset($_SESSION['user'])): ?>
+    <?php if(isset($_SESSION['user'])): ?>
       <span class="usuario-logado">Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></span>
     <?php endif; ?>
+
     <div class="nav-links">
       <a href="#sobre">Sobre</a>
       <a href="#projeto">Projetos</a>
@@ -28,137 +30,141 @@ session_start();
       <?php else: ?>
         <a href="login.php">Login</a>
       <?php endif; ?>
-    </nav>
+    </div>
   </div>
 </header>
+
 <main class="container">
 
-
-  <section class="banner">
-    <div class="banner-text">
-      <p><strong>Junte-se ao meu movimento de voluntariado ambiental!</strong><br>
-      Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
+<section class="banner">
+  <div class="banner-text">
+    <p><strong>Junte-se ao meu movimento de voluntariado ambiental!</strong><br>
+     Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
       Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje 
       e garantindo um futuro sustentável para as próximas gerações.</p>
-    </div>
-    <div class="banner-img">
-      <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado Img Principal">
-    </div>
-  </section>
+  </div>
+  <div class="banner-img">
+    <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg">
+  </div>
+</section>
 
-  <section class="grid">
-    <div class="card" id="sobre">
-      <h3>Sobre</h3>
-      <p>Sou uma pessoa dedicada ao voluntariado e à promoção de práticas sustentáveis.</p>
-      <a href="#" class="link-mais">Mais</a>
-    </div>
-    <div class="card" id="projeto">
-      <h3>Projeto</h3>
-      <p>Desenvolvo este projetos de voluntariado com a intensado de ajudar que mais necessita.</p>
-      <a href="#" class="link-mais">Mais</a>
-    </div>
-    <div class="card" id="doacoes">
-      <h3>Doações</h3>
-      <p>A sua doação ajudame a continuar o meu trabalho. Cada doação ajuda este website a melhorar.</p>
-      <a href="#" class="link-mais">Mais</a>
-    </div>
-    <div class="card" id="envolva">
-      <h3>Envolva-se</h3>
-      <p>Participe em atividades, crie eventos que pense que ajudem a comunidade e o planeta.</p>
-      <a href="#" class="link-mais">Mais</a>
-    </div>
-  </section>
+<section class="grid">
+  <div class="card" id="sobre"><h3>Sobre</h3><p>Sou uma pessoa dedicada ao voluntariado e à promoção de práticas sustentáveis..</p></div>
+  <div class="card" id="projeto"><h3>Projeto</h3><p>Desenvolvo este projetos de voluntariado com a intensado de ajudar que mais necessita.</p></div>
+  <div class="card" id="doacoes"><h3>Doações</h3><p>A sua doação ajudame a continuar o meu trabalho. Cada doação ajuda este website a melhorar.</p></div>
+  <div class="card" id="envolva"><h3>Envolva-se</h3><p>Participe em atividades, crie eventos que pense que ajudem a comunidade e o planeta.</p></div>
+</section>
 
-  <section id="criar-evento">
-    <?php if(!isset($_SESSION['user'])): ?>
-      <h3>Login Necessário</h3>
-      <p>Para criar um evento, por favor <a href="login.php">faça login</a>.</p>
-    <?php else: ?>
-      <h3>Criar Evento de Voluntariado</h3>
-      <form id="eventoForm">
-        <label for="nome">Nome do Evento:</label>
-        <input type="text" id="nome" name="nome" required>
+<section id="criar-evento">
+<?php if(!isset($_SESSION['user'])): ?>
+  <p>Para criar eventos faça <a href="login.php">login</a>.</p>
+<?php else: ?>
+  <h3>Criar Evento</h3>
+  <form id="eventoForm">
+    <input type="text" id="nome" placeholder="Nome" required>
+    <textarea id="descricao" placeholder="Descrição" required></textarea>
+    <input type="date" id="data" required>
+    <input type="text" id="local" placeholder="Local" required>
+    <input type="file" id="imagem" accept="image/*">
+    <button type="submit">Criar Evento</button>
+  </form>
+<?php endif; ?>
+</section>
 
-        <label for="descricao">Descrição:</label>
-        <textarea id="descricao" name="descricao" rows="4" required></textarea>
+<section id="eventosProjetos">
+  <h3 class="titulo-eventos">Eventos</h3>
 
-        <label for="data">Data:</label>
-        <input type="date" id="data" name="data" required>
-
-        <label for="local">Local:</label>
-        <input type="text" id="local" name="local" required>
-
-        <label for="imagem">Imagem do Evento:</label>
-        <input type="file" id="imagem" name="imagem" accept="image/*">
-
-        <button type="submit">Criar Evento</button>
-      </form>
-      <p> <?php echo htmlspecialchars($_SESSION['user']['nome']); ?></p>
-    <?php endif; ?>
-  </section>
-
-  <section id="eventosProjetos">
-    <h3 class="titulo-eventos">Eventos Criados</h3>
-  </section>
+  <!-- FILTRO -->
+  <div class="filtro-eventos">
+    <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
+    <button class="filtro-btn" data-filtro="criados">Criados</button>
+    <button class="filtro-btn" data-filtro="participar">A participar</button>
+  </div>
+</section>
 
 </main>
 
-<footer>
-  © 2025 Site criado por David B.Criado em HTML.
-</footer>
+<footer>© 2025 HumaniCare</footer>
 
 <script>
 const form = document.getElementById('eventoForm');
 const containerEventos = document.getElementById('eventosProjetos');
+let eventos = [];
+
+function renderEventos(filtro = 'todos') {
+  document.querySelectorAll('.evento-card').forEach(e => e.remove());
+
+  eventos.forEach(ev => {
+    if (filtro === 'criados' && ev.tipo !== 'criado') return;
+    if (filtro === 'participar' && !ev.participando) return;
+    containerEventos.appendChild(ev.el);
+  });
+}
 
 function criarEvento(nome, descricao, data, local, arquivo) {
   const div = document.createElement('div');
-  div.classList.add('evento-card');
+  div.className = 'evento-card';
 
-  let imagemHTML = '';
-  if (arquivo) {
-    const urlImagem = URL.createObjectURL(arquivo);
-    imagemHTML = `<img src="${urlImagem}" alt="${nome}" class="evento-img">`;
-  }
+  let img = '';
+  if (arquivo) img = `<img src="${URL.createObjectURL(arquivo)}" class="evento-img">`;
 
   div.innerHTML = `
-    <center>
-      <h4>${nome}</h4>
-      ${imagemHTML}
-      <p><strong>Data:</strong> ${data} <strong>Local:</strong> ${local}</p>
-      <p><strong>Descrição:</strong> ${descricao}</p>
-      <button class="participar-btn">Participar</button>
-      <p>Pessoas a participar: <span class="contador">0</span></p>
-    </center>
+    <h4>${nome}</h4>
+    ${img}
+    <p><strong>Data:</strong> ${data}</p>
+    <p><strong>Local:</strong> ${local}</p>
+    <p>${descricao}</p>
+    <button class="participar-btn">Participar</button>
+    <span class="badge criado">Criado</span>
   `;
 
+  const evento = { tipo:'criado', participando:false, el:div };
+
   const btn = div.querySelector('.participar-btn');
-  const contador = div.querySelector('.contador');
 
-  btn.addEventListener('click', () => {
-    contador.textContent = parseInt(contador.textContent) + 1;
-  });
+btn.onclick = () => {
+  evento.participando = !evento.participando;
 
-  containerEventos.appendChild(div);
-  div.scrollIntoView({behavior:"smooth"});
+  let badge = div.querySelector('.badge.participar');
+
+  if (evento.participando) {
+    btn.textContent = 'Parar de participar';
+    btn.classList.add('btn-parar');
+
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'badge participar';
+      badge.textContent = 'A participar';
+      div.appendChild(badge);
+    }
+  } else {
+    btn.textContent = 'Participar';
+    btn.classList.remove('btn-parar');
+
+    if (badge) badge.remove();
+  }
+};
+
+
+  eventos.push(evento);
+  renderEventos();
 }
 
 if (form) {
-  form.addEventListener('submit', function(e) {
+  form.onsubmit = e => {
     e.preventDefault();
-
-    const nome = document.getElementById('nome').value;
-    const descricao = document.getElementById('descricao').value;
-    const data = document.getElementById('data').value;
-    const local = document.getElementById('local').value;
-    const imagemInput = document.getElementById('imagem');
-    const arquivo = imagemInput.files[0];
-
-    criarEvento(nome, descricao, data, local, arquivo);
-
+    criarEvento(nome.value, descricao.value, data.value, local.value, imagem.files[0]);
     form.reset();
-  });
+  };
 }
+
+document.querySelectorAll('.filtro-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('ativo'));
+    btn.classList.add('ativo');
+    renderEventos(btn.dataset.filtro);
+  };
+});
 </script>
 
 </body>
