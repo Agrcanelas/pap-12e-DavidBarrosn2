@@ -1,65 +1,62 @@
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+-- Criação da Base de Dados
+CREATE DATABASE IF NOT EXISTS sistema_eventos;
+USE sistema_eventos;
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+-- Tabela Utilizador
+CREATE TABLE Utilizador (
+    utilizador_id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    data_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
--- --------------------------------------------------------
--- Base de dados: `humanicare`
--- --------------------------------------------------------
+-- Tabela Evento
+CREATE TABLE Evento (
+    evento_id INT PRIMARY KEY AUTO_INCREMENT,
+    titulo VARCHAR(200) NOT NULL,
+    local VARCHAR(200),
+    data_evento DATETIME NOT NULL,
+    vagas INT DEFAULT 0
+);
 
-CREATE DATABASE IF NOT EXISTS `humanicare`
-  DEFAULT CHARACTER SET utf8mb4
-  COLLATE utf8mb4_general_ci;
+-- Tabela Cria (relacionamento Utilizador cria Evento)
+CREATE TABLE Cria (
+    evento_id INT NOT NULL,
+    utilizador_id INT NOT NULL,
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (evento_id, utilizador_id),
+    FOREIGN KEY (evento_id) REFERENCES Evento(evento_id) ON DELETE CASCADE,
+    FOREIGN KEY (utilizador_id) REFERENCES Utilizador(utilizador_id) ON DELETE CASCADE
+);
 
-USE `humanicare`;
+-- Tabela Participa (relacionamento Utilizador participa em Evento)
+CREATE TABLE Participa (
+    evento_id INT NOT NULL,
+    utilizador_id INT NOT NULL,
+    data_participacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (evento_id, utilizador_id),
+    FOREIGN KEY (evento_id) REFERENCES Evento(evento_id) ON DELETE CASCADE,
+    FOREIGN KEY (utilizador_id) REFERENCES Utilizador(utilizador_id) ON DELETE CASCADE
+);
 
--- --------------------------------------------------------
--- Tabela: utilizador
--- --------------------------------------------------------
+-- Índices para melhorar performance
+CREATE INDEX idx_evento_data ON Evento(data_evento);
+CREATE INDEX idx_utilizador_email ON Utilizador(email);
+CREATE INDEX idx_cria_utilizador ON Cria(utilizador_id);
+CREATE INDEX idx_participa_utilizador ON Participa(utilizador_id);
 
-CREATE TABLE `utilizador` (
-  `utilizador_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `nome` VARCHAR(200) NOT NULL,
-  `email` VARCHAR(100) NOT NULL,
-  `senha` VARCHAR(20) NOT NULL,
-  `data_registo` DATE NOT NULL,
-  PRIMARY KEY (`utilizador_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Exemplos de inserção de dados
+-- INSERT INTO Utilizador (nome, email, senha) VALUES 
+-- ('João Silva', 'joao@email.com', 'senha_hash_aqui'),
+-- ('Maria Santos', 'maria@email.com', 'senha_hash_aqui');
 
--- --------------------------------------------------------
--- Dados iniciais da tabela utilizador
--- --------------------------------------------------------
+-- INSERT INTO Evento (titulo, local, data_evento, vagas) VALUES 
+-- ('Workshop de SQL', 'Lisboa', '2026-02-15 14:00:00', 30),
+-- ('Conferência Tech', 'Porto', '2026-03-20 09:00:00', 100);
 
-INSERT INTO `utilizador` (`utilizador_id`, `nome`, `email`, `senha`, `data_registo`) VALUES
-(1, 'ze', 'ze@gmail.com', '1234', '2025-11-02');
+-- INSERT INTO Cria (evento_id, utilizador_id) VALUES (1, 1);
 
--- --------------------------------------------------------
--- Tabela: evento
--- --------------------------------------------------------
-
-CREATE TABLE `evento` (
-  `evento_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `nome` VARCHAR(200) NOT NULL,
-  `descricao` TEXT NOT NULL,
-  `data_evento` DATE NOT NULL,
-  `local_evento` VARCHAR(200) NOT NULL,
-  `imagem` VARCHAR(255) DEFAULT NULL,
-  `utilizador_id` INT(11) NOT NULL,
-  `data_criacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`evento_id`),
-  KEY `fk_evento_utilizador` (`utilizador_id`),
-  CONSTRAINT `fk_evento_utilizador`
-    FOREIGN KEY (`utilizador_id`)
-    REFERENCES `utilizador` (`utilizador_id`)
-    ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- INSERT INTO Participa (evento_id, utilizador_id) VALUES 
+-- (1, 2),
+-- (2, 1);
