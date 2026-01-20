@@ -45,18 +45,3 @@ CREATE INDEX idx_evento_data ON Evento(data_evento);
 CREATE INDEX idx_utilizador_email ON Utilizador(email);
 CREATE INDEX idx_cria_utilizador ON Cria(utilizador_id);
 CREATE INDEX idx_participa_utilizador ON Participa(utilizador_id);
-
--- Exemplos de inserção de dados
--- INSERT INTO Utilizador (nome, email, senha) VALUES 
--- ('João Silva', 'joao@email.com', 'senha_hash_aqui'),
--- ('Maria Santos', 'maria@email.com', 'senha_hash_aqui');
-
--- INSERT INTO Evento (titulo, local, data_evento, vagas) VALUES 
--- ('Workshop de SQL', 'Lisboa', '2026-02-15 14:00:00', 30),
--- ('Conferência Tech', 'Porto', '2026-03-20 09:00:00', 100);
-
--- INSERT INTO Cria (evento_id, utilizador_id) VALUES (1, 1);
-
--- INSERT INTO Participa (evento_id, utilizador_id) VALUES 
--- (1, 2),
--- (2, 1);
