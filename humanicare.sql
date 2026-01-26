@@ -112,4 +112,4 @@ INSERT INTO Participa (evento_id, utilizador_id) VALUES
 (4, 1),  -- João participa no Hackathon
 (4, 3),  -- Pedro participa no Hackathon
 (5, 2),  -- Maria participa no Curso JS
-(5, 4);  -- Ana participa no Curso JS
+(5, 4);  -- Ana participa no Curso JS;
