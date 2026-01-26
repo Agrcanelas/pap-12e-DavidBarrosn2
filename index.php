@@ -1,5 +1,20 @@
 <?php
 session_start();
+require_once 'db.php';
+
+// Buscar eventos da base de dados
+$eventos = [];
+try {
+    $stmt = $pdo->query("
+        SELECT e.*, u.nome as criador_nome 
+        FROM evento e 
+        JOIN utilizador u ON e.utilizador_id = u.utilizador_id 
+        ORDER BY e.data_criacao DESC
+    ");
+    $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $erro_eventos = "Erro ao carregar eventos: " . $e->getMessage();
+}
 ?>
 <!doctype html>
 <html lang="pt-PT">
@@ -117,28 +132,37 @@ session_start();
   </div>
 <?php else: ?>
   <h3>✏️ Criar Evento</h3>
-  <form id="eventoForm">
+  
+  <?php if(isset($_GET['sucesso'])): ?>
+    <div class="mensagem sucesso">✅ Evento criado com sucesso!</div>
+  <?php endif; ?>
+  
+  <?php if(isset($_GET['erro'])): ?>
+    <div class="mensagem erro">❌ Erro ao criar evento. Tente novamente.</div>
+  <?php endif; ?>
+  
+  <form action="guardar_evento.php" method="POST" enctype="multipart/form-data">
     <div class="form-group">
       <label for="nome">Nome do Evento</label>
-      <input type="text" id="nome" placeholder="Ex: Limpeza da Praia" required>
+      <input type="text" id="nome" name="nome" placeholder="Ex: Limpeza da Praia" required>
     </div>
     <div class="form-group">
       <label for="descricao">Descrição</label>
-      <textarea id="descricao" placeholder="Descreva o evento..." required></textarea>
+      <textarea id="descricao" name="descricao" placeholder="Descreva o evento..." required></textarea>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label for="data">Data</label>
-        <input type="date" id="data" required>
+        <input type="date" id="data" name="data" required>
       </div>
       <div class="form-group">
         <label for="local">Local</label>
-        <input type="text" id="local" placeholder="Ex: Porto" required>
+        <input type="text" id="local" name="local" placeholder="Ex: Porto" required>
       </div>
     </div>
     <div class="form-group">
       <label for="imagem">Imagem (opcional)</label>
-      <input type="file" id="imagem" accept="image/*">
+      <input type="file" id="imagem" name="imagem" accept="image/*">
     </div>
     <button type="submit" class="btn-submit">Criar Evento</button>
   </form>
@@ -150,9 +174,41 @@ session_start();
 
   <div class="filtro-eventos">
     <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
-    <button class="filtro-btn" data-filtro="criados">Criados</button>
-    <button class="filtro-btn" data-filtro="participar">A participar</button>
+    <button class="filtro-btn" data-filtro="criados">Criados por mim</button>
   </div>
+
+  <?php if(isset($erro_eventos)): ?>
+    <p style="grid-column: 1 / -1; text-align: center; color: #c0392b; padding: 20px;">
+      <?php echo htmlspecialchars($erro_eventos); ?>
+    </p>
+  <?php elseif(empty($eventos)): ?>
+    <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 40px 20px;">
+      Ainda não existem eventos criados. Seja o primeiro a criar um!
+    </p>
+  <?php else: ?>
+    <?php foreach($eventos as $evento): ?>
+      <div class="evento-card" data-criador="<?php echo $evento['utilizador_id']; ?>">
+        <?php if($evento['imagem']): ?>
+          <img src="uploads/<?php echo htmlspecialchars($evento['imagem']); ?>" 
+               alt="<?php echo htmlspecialchars($evento['nome']); ?>" 
+               class="evento-img">
+        <?php endif; ?>
+        
+        <h4><?php echo htmlspecialchars($evento['nome']); ?></h4>
+        
+        <div class="evento-info">
+          <p><strong>📅 Data:</strong> <?php echo date('d/m/Y', strtotime($evento['data_evento'])); ?></p>
+          <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($evento['local_evento']); ?></p>
+          <p><strong>👤 Criador:</strong> <?php echo htmlspecialchars($evento['criador_nome']); ?></p>
+          <p class="evento-desc"><?php echo htmlspecialchars($evento['descricao']); ?></p>
+        </div>
+        
+        <?php if(isset($_SESSION['user']) && $_SESSION['user']['utilizador_id'] == $evento['utilizador_id']): ?>
+          <span class="badge criado">Criado por mim</span>
+        <?php endif; ?>
+      </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
 </section>
 
 </main>
@@ -201,84 +257,46 @@ setInterval(function() {
   plusSlides(1);
 }, 4000);
 
-// ========== EVENTOS ==========
-const form = document.getElementById('eventoForm');
-const containerEventos = document.getElementById('eventosProjetos');
-let eventos = [];
-
-function renderEventos(filtro = 'todos') {
-  document.querySelectorAll('.evento-card').forEach(e => e.remove());
-
-  eventos.forEach(ev => {
-    if (filtro === 'criados' && ev.tipo !== 'criado') return;
-    if (filtro === 'participar' && !ev.participando) return;
-    containerEventos.appendChild(ev.el);
-  });
-}
-
-function criarEvento(nome, descricao, data, local, arquivo) {
-  const div = document.createElement('div');
-  div.className = 'evento-card';
-
-  let img = '';
-  if (arquivo) img = `<img src="${URL.createObjectURL(arquivo)}" class="evento-img" alt="${nome}">`;
-
-  div.innerHTML = `
-    ${img}
-    <h4>${nome}</h4>
-    <div class="evento-info">
-      <p><strong>📅 Data:</strong> ${new Date(data).toLocaleDateString('pt-PT')}</p>
-      <p><strong>📍 Local:</strong> ${local}</p>
-      <p class="evento-desc">${descricao}</p>
-    </div>
-    <button class="participar-btn">Participar</button>
-    <span class="badge criado">Criado</span>
-  `;
-
-  const evento = { tipo:'criado', participando:false, el:div };
-
-  const btn = div.querySelector('.participar-btn');
-
-  btn.onclick = () => {
-    evento.participando = !evento.participando;
-    let badge = div.querySelector('.badge.participar');
-
-    if (evento.participando) {
-      btn.textContent = 'Parar de participar';
-      btn.classList.add('btn-parar');
-
-      if (!badge) {
-        badge = document.createElement('span');
-        badge.className = 'badge participar';
-        badge.textContent = 'A Participar';
-        div.appendChild(badge);
-      }
-    } else {
-      btn.textContent = 'Participar';
-      btn.classList.remove('btn-parar');
-      if (badge) badge.remove();
-    }
-  };
-
-  eventos.push(evento);
-  renderEventos();
-}
-
-if (form) {
-  form.onsubmit = e => {
-    e.preventDefault();
-    criarEvento(nome.value, descricao.value, data.value, local.value, imagem.files[0]);
-    form.reset();
-  };
-}
+// ========== FILTRO DE EVENTOS ==========
+<?php if(isset($_SESSION['user'])): ?>
+const utilizadorId = <?php echo $_SESSION['user']['utilizador_id']; ?>;
+<?php else: ?>
+const utilizadorId = null;
+<?php endif; ?>
 
 document.querySelectorAll('.filtro-btn').forEach(btn => {
   btn.onclick = () => {
-    document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('ativo'));
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
     btn.classList.add('ativo');
-    renderEventos(btn.dataset.filtro);
+    
+    const filtro = btn.dataset.filtro;
+    const cards = document.querySelectorAll('.evento-card');
+    
+    cards.forEach(card => {
+      const criadorId = parseInt(card.dataset.criador);
+      
+      if (filtro === 'todos') {
+        card.style.display = 'block';
+      } else if (filtro === 'criados') {
+        if (utilizadorId && criadorId === utilizadorId) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      }
+    });
   };
 });
+
+// Remover mensagens de sucesso/erro após 5 segundos
+setTimeout(() => {
+  const mensagens = document.querySelectorAll('.mensagem');
+  mensagens.forEach(msg => {
+    msg.style.transition = 'opacity 0.5s';
+    msg.style.opacity = '0';
+    setTimeout(() => msg.remove(), 500);
+  });
+}, 5000);
 </script>
 
 </body>

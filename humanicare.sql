@@ -7,7 +7,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS Participa;
-DROP TABLE IF EXISTS Cria;
 DROP TABLE IF EXISTS Evento;
 DROP TABLE IF EXISTS Utilizador;
 
@@ -33,7 +32,7 @@ CREATE TABLE Utilizador (
 -- ============================================
 CREATE TABLE Evento (
     evento_id INT NOT NULL AUTO_INCREMENT,
-    titulo VARCHAR(200) NOT NULL,
+    nome VARCHAR(200) NOT NULL,
     descricao TEXT NULL,
     data_evento DATE NOT NULL,
     local_evento VARCHAR(200) NOT NULL,
@@ -75,25 +74,25 @@ CREATE TABLE Participa (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================
--- 5. CRIAR ÍNDICES ADICIONAIS (OPCIONAL - para melhor performance)
+-- 5. CRIAR ÍNDICES ADICIONAIS (para melhor performance)
 -- ============================================
 CREATE INDEX idx_evento_data ON Evento(data_evento);
 CREATE INDEX idx_evento_utilizador ON Evento(utilizador_id);
 CREATE INDEX idx_participa_utilizador ON Participa(utilizador_id);
 
 -- ============================================
--- 6. INSERIR DADOS DE TESTE (OPCIONAL)
+-- 6. INSERIR DADOS DE TESTE
 -- ============================================
 
--- Inserir utilizadores de teste
+-- Inserir utilizadores de teste (senha: "123456" sem hash por simplicidade)
 INSERT INTO Utilizador (nome, email, senha, telefone) VALUES
-('João Silva', 'joao.silva@email.com', '$2y$10$abcdefghijklmnopqrstuv', '912345678'),
-('Maria Santos', 'maria.santos@email.com', '$2y$10$abcdefghijklmnopqrstuv', '913456789'),
-('Pedro Costa', 'pedro.costa@email.com', '$2y$10$abcdefghijklmnopqrstuv', '914567890'),
-('Ana Ferreira', 'ana.ferreira@email.com', '$2y$10$abcdefghijklmnopqrstuv', '915678901');
+('João Silva', 'joao.silva@email.com', '123456', '912345678'),
+('Maria Santos', 'maria.santos@email.com', '123456', '913456789'),
+('Pedro Costa', 'pedro.costa@email.com', '123456', '914567890'),
+('Ana Ferreira', 'ana.ferreira@email.com', '123456', '915678901');
 
 -- Inserir eventos de teste
-INSERT INTO Evento (titulo, descricao, data_evento, local_evento, vagas, utilizador_id) VALUES
+INSERT INTO Evento (nome, descricao, data_evento, local_evento, vagas, utilizador_id) VALUES
 ('Workshop de PHP', 'Aprenda PHP do zero ao avançado', '2026-02-15', 'Centro de Formação Lisboa', 30, 1),
 ('Conferência de Tecnologia', 'As últimas tendências em desenvolvimento web', '2026-03-10', 'Pavilhão Multiusos Porto', 100, 1),
 ('Meetup de Programadores', 'Networking e partilha de experiências', '2026-02-20', 'Café Central Coimbra', 20, 2),
@@ -112,4 +111,16 @@ INSERT INTO Participa (evento_id, utilizador_id) VALUES
 (4, 1),  -- João participa no Hackathon
 (4, 3),  -- Pedro participa no Hackathon
 (5, 2),  -- Maria participa no Curso JS
-(5, 4);  -- Ana participa no Curso JS;
+(5, 4);  -- Ana participa no Curso JS
+
+-- ============================================
+-- 7. VERIFICAR DADOS
+-- ============================================
+SELECT 'Utilizadores criados:' as Info;
+SELECT * FROM Utilizador;
+
+SELECT 'Eventos criados:' as Info;
+SELECT * FROM Evento;
+
+SELECT 'Participações registadas:' as Info;
+SELECT * FROM Participa;
