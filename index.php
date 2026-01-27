@@ -215,6 +215,7 @@ $utilizador_logado = isset($_SESSION['user']);
   <?php if($utilizador_logado): ?>
   <div class="filtro-eventos">
     <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
+    <button class="filtro-btn" data-filtro="participa">A participar</button>
     <button class="filtro-btn" data-filtro="criados">Criados por mim</button>
   </div>
   <?php endif; ?>
@@ -264,7 +265,7 @@ $utilizador_logado = isset($_SESSION['user']);
 </main>
 
 <footer>
-  <p>© 2025 HumaniCare - Juntos por um futuro melhor 🌿</p>
+  <p>© 2026 HumaniCare - Juntos por um futuro melhor 🌿</p>
 </footer>
 
 <script>
