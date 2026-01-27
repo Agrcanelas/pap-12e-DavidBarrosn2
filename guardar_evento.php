@@ -174,7 +174,6 @@ try {
     if (isset($imagem_nome) && file_exists("uploads/" . $imagem_nome)) {
         unlink("uploads/" . $imagem_nome);
     }
- 
     exit;
 }
 ?>
