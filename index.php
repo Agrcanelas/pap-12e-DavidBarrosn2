@@ -1,14 +1,13 @@
 <?php
 session_start();
 
-// Verificar se o ficheiro db.php existe
 if (file_exists('db.php')) {
     require_once 'db.php';
 } else {
     die("Erro: Ficheiro db.php não encontrado!");
 }
 
-// Buscar eventos da base de dados
+// ---------- Buscar eventos ----------
 $eventos = [];
 $erro_eventos = null;
 
@@ -22,11 +21,24 @@ try {
     $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $erro_eventos = "Erro ao carregar eventos.";
-    // Log do erro (para debug)
     error_log("Erro BD: " . $e->getMessage());
 }
 
 $utilizador_logado = isset($_SESSION['user']);
+
+// ---------- Buscar participações do utilizador logado ----------
+$participacoes = []; // array de evento_id nos quais o utilizador participa
+if ($utilizador_logado) {
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT evento_id FROM participa WHERE utilizador_id = :uid"
+        );
+        $stmt->execute([':uid' => $_SESSION['user']['utilizador_id']]);
+        $participacoes = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'evento_id');
+    } catch (PDOException $e) {
+        error_log("Erro ao buscar participações: " . $e->getMessage());
+    }
+}
 ?>
 <!doctype html>
 <html lang="pt-PT">
@@ -70,6 +82,7 @@ $utilizador_logado = isset($_SESSION['user']);
 
 <main class="container">
 
+<!-- ===== BANNER ===== -->
 <section class="banner">
   <div class="banner-text">
     <h2>Junte-se ao movimento!</h2>
@@ -85,26 +98,21 @@ $utilizador_logado = isset($_SESSION['user']);
         <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado">
         <div class="text-slide">Ajude o Planeta</div>
       </div>
-
       <div class="mySlides fade">
         <img src="https://picsum.photos/800/600?random=1" alt="Natureza">
         <div class="text-slide">Preserve a Natureza</div>
       </div>
-
       <div class="mySlides fade">
         <img src="https://picsum.photos/800/600?random=2" alt="Comunidade">
         <div class="text-slide">Fortaleça a Comunidade</div>
       </div>
-
       <div class="mySlides fade">
         <img src="https://picsum.photos/800/600?random=3" alt="Futuro">
         <div class="text-slide">Construa o Futuro</div>
       </div>
-
       <a class="prev" onclick="plusSlides(-1)">❮</a>
       <a class="next" onclick="plusSlides(1)">❯</a>
     </div>
-
     <div style="text-align:center; padding: 10px 0;">
       <span class="dot" onclick="currentSlide(1)"></span>
       <span class="dot" onclick="currentSlide(2)"></span>
@@ -114,6 +122,7 @@ $utilizador_logado = isset($_SESSION['user']);
   </div>
 </section>
 
+<!-- ===== CARDS INFO ===== -->
 <section class="grid">
   <div class="card" id="sobre">
     <div class="card-icon">🌱</div>
@@ -137,6 +146,7 @@ $utilizador_logado = isset($_SESSION['user']);
   </div>
 </section>
 
+<!-- ===== CRIAR EVENTO ===== -->
 <section id="criar-evento">
 <?php if(!$utilizador_logado): ?>
   <div class="login-prompt">
@@ -154,23 +164,12 @@ $utilizador_logado = isset($_SESSION['user']);
       ❌ 
       <?php 
         switch($_GET['erro']) {
-          case 'campos_vazios': 
-            echo 'Preencha todos os campos obrigatórios.'; 
-            break;
-          case 'tipo_imagem': 
-            echo 'Tipo de imagem inválido. Use JPG, PNG ou GIF.'; 
-            break;
-          case 'tamanho_imagem': 
-            echo 'Imagem muito grande. Máximo 5MB.'; 
-            break;
-          case 'upload': 
-            echo 'Erro ao fazer upload da imagem.'; 
-            break;
-          case 'bd': 
-            echo 'Erro ao guardar na base de dados. Verifique a conexão.'; 
-            break;
-          default: 
-            echo 'Erro ao criar evento. Tente novamente.';
+          case 'campos_vazios':    echo 'Preencha todos os campos obrigatórios.'; break;
+          case 'tipo_imagem':      echo 'Tipo de imagem inválido. Use JPG, PNG ou GIF.'; break;
+          case 'tamanho_imagem':   echo 'Imagem muito grande. Máximo 5MB.'; break;
+          case 'upload':           echo 'Erro ao fazer upload da imagem.'; break;
+          case 'bd':               echo 'Erro ao guardar na base de dados. Verifique a conexão.'; break;
+          default:                 echo 'Erro ao criar evento. Tente novamente.';
         }
       ?>
     </div>
@@ -181,12 +180,10 @@ $utilizador_logado = isset($_SESSION['user']);
       <label for="nome">Nome do Evento *</label>
       <input type="text" id="nome" name="nome" placeholder="Ex: Limpeza da Praia" required maxlength="200">
     </div>
-    
     <div class="form-group">
       <label for="descricao">Descrição *</label>
       <textarea id="descricao" name="descricao" rows="4" placeholder="Descreva o evento..." required></textarea>
     </div>
-    
     <div class="form-row">
       <div class="form-group">
         <label for="data">Data *</label>
@@ -197,18 +194,17 @@ $utilizador_logado = isset($_SESSION['user']);
         <input type="text" id="local" name="local" placeholder="Ex: Porto" required maxlength="200">
       </div>
     </div>
-    
     <div class="form-group">
       <label for="imagem">Imagem (opcional - máx 5MB)</label>
       <input type="file" id="imagem" name="imagem" accept="image/jpeg,image/jpg,image/png,image/gif">
       <small style="color: #666; font-size: 13px;">Formatos aceites: JPG, PNG, GIF</small>
     </div>
-    
     <button type="submit" class="btn-submit" id="btnSubmit">Criar Evento</button>
   </form>
 <?php endif; ?>
 </section>
 
+<!-- ===== EVENTOS ===== -->
 <section id="eventosProjetos">
   <h3 class="titulo-eventos">📅 Eventos</h3>
 
@@ -220,7 +216,8 @@ $utilizador_logado = isset($_SESSION['user']);
   </div>
   <?php endif; ?>
 
-  <div class="eventos-container">
+  <!-- THIS is the grid container for the cards -->
+  <div class="eventos-grid">
   <?php if($erro_eventos): ?>
     <p class="mensagem-centro erro-eventos">
       <?php echo htmlspecialchars($erro_eventos); ?>
@@ -231,7 +228,16 @@ $utilizador_logado = isset($_SESSION['user']);
     </p>
   <?php else: ?>
     <?php foreach($eventos as $evento): ?>
-      <div class="evento-card" data-criador="<?php echo htmlspecialchars($evento['utilizador_id']); ?>">
+      <?php
+        $eid          = $evento['evento_id'];
+        $é_criador    = $utilizador_logado && ($_SESSION['user']['utilizador_id'] == $evento['utilizador_id']);
+        $participa_em = $utilizador_logado && in_array($eid, $participacoes);
+      ?>
+      <div class="evento-card"
+           data-criador="<?php echo htmlspecialchars($evento['utilizador_id']); ?>"
+           data-evento="<?php echo $eid; ?>"
+           data-participa="<?php echo $participa_em ? '1' : '0'; ?>">
+
         <?php if(!empty($evento['imagem']) && file_exists('uploads/' . $evento['imagem'])): ?>
           <img src="uploads/<?php echo htmlspecialchars($evento['imagem']); ?>" 
                alt="<?php echo htmlspecialchars($evento['nome']); ?>" 
@@ -246,12 +252,19 @@ $utilizador_logado = isset($_SESSION['user']);
           <p><strong>👤 Criador:</strong> <?php echo htmlspecialchars($evento['criador_nome']); ?></p>
           <p class="evento-desc"><?php echo nl2br(htmlspecialchars($evento['descricao'])); ?></p>
         </div>
-        
-        <?php if($utilizador_logado && $_SESSION['user']['utilizador_id'] == $evento['utilizador_id']): ?>
+
+        <!-- Badge "Criado por mim" -->
+        <?php if($é_criador): ?>
           <span class="badge criado">Criado por mim</span>
         <?php endif; ?>
-        
-        <?php if(!$utilizador_logado): ?>
+
+        <!-- Botão Participar / Já Inscrito  (não aparece nos eventos que o próprio criou) -->
+        <?php if($utilizador_logado && !$é_criador): ?>
+          <button class="participar-btn <?php echo $participa_em ? 'btn-parar' : ''; ?>"
+                  onclick="toggleParticipacao(this)">
+            <?php echo $participa_em ? '✓ Já Inscrito' : 'Participar'; ?>
+          </button>
+        <?php elseif(!$utilizador_logado): ?>
           <button class="participar-btn" onclick="redirecionarLogin()">
             Participar
           </button>
@@ -259,7 +272,7 @@ $utilizador_logado = isset($_SESSION['user']);
       </div>
     <?php endforeach; ?>
   <?php endif; ?>
-  </div>
+  </div><!-- fim eventos-grid -->
 </section>
 
 </main>
@@ -268,147 +281,161 @@ $utilizador_logado = isset($_SESSION['user']);
   <p>© 2026 HumaniCare - Juntos por um futuro melhor 🌿</p>
 </footer>
 
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
 <script>
-// ========== CARROSSEL ==========
+// ===== CARROSSEL =====
 let slideIndex = 1;
 showSlides(slideIndex);
 
-function plusSlides(n) {
-  showSlides(slideIndex += n);
-}
-
-function currentSlide(n) {
-  showSlides(slideIndex = n);
-}
+function plusSlides(n) { showSlides(slideIndex += n); }
+function currentSlide(n) { showSlides(slideIndex = n); }
 
 function showSlides(n) {
-  let slides = document.getElementsByClassName("mySlides");
-  let dots = document.getElementsByClassName("dot");
-  
-  if (n > slides.length) { slideIndex = 1 }
-  if (n < 1) { slideIndex = slides.length }
-  
-  for (let i = 0; i < slides.length; i++) {
-    slides[i].style.display = "none";
-  }
-  
-  for (let i = 0; i < dots.length; i++) {
-    dots[i].className = dots[i].className.replace(" active", "");
-  }
-  
+  const slides = document.getElementsByClassName("mySlides");
+  const dots   = document.getElementsByClassName("dot");
+  if (n > slides.length) slideIndex = 1;
+  if (n < 1)            slideIndex = slides.length;
+  for (let i = 0; i < slides.length; i++) slides[i].style.display = "none";
+  for (let i = 0; i < dots.length; i++)   dots[i].classList.remove("active");
   if (slides.length > 0) {
     slides[slideIndex - 1].style.display = "block";
-    dots[slideIndex - 1].className += " active";
+    dots[slideIndex - 1].classList.add("active");
   }
 }
+setInterval(() => plusSlides(1), 4000);
 
-// Auto-play do carrossel
-setInterval(function() {
-  plusSlides(1);
-}, 4000);
-
-// ========== VALIDAÇÃO DO FORMULÁRIO ==========
+// ===== VALIDAÇÃO FORMULÁRIO =====
 <?php if($utilizador_logado): ?>
 const formEvento = document.getElementById('formEvento');
-const btnSubmit = document.getElementById('btnSubmit');
+const btnSubmit  = document.getElementById('btnSubmit');
 
 if (formEvento) {
   formEvento.addEventListener('submit', function(e) {
-    const nome = document.getElementById('nome').value.trim();
+    const nome      = document.getElementById('nome').value.trim();
     const descricao = document.getElementById('descricao').value.trim();
-    const data = document.getElementById('data').value;
-    const local = document.getElementById('local').value.trim();
-    
+    const data      = document.getElementById('data').value;
+    const local     = document.getElementById('local').value.trim();
+
     if (!nome || !descricao || !data || !local) {
       e.preventDefault();
       alert('Por favor, preencha todos os campos obrigatórios.');
       return false;
     }
-    
-    // Validar imagem se selecionada
+
     const imagem = document.getElementById('imagem');
     if (imagem.files.length > 0) {
       const file = imagem.files[0];
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      
-      if (file.size > maxSize) {
+      if (file.size > 5 * 1024 * 1024) {
         e.preventDefault();
         alert('A imagem é muito grande. Máximo 5MB.');
         return false;
       }
-      
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
+      if (!['image/jpeg','image/jpg','image/png','image/gif'].includes(file.type)) {
         e.preventDefault();
         alert('Tipo de ficheiro inválido. Use JPG, PNG ou GIF.');
         return false;
       }
     }
-    
-    // Desativar botão para evitar duplo submit
+
     btnSubmit.disabled = true;
     btnSubmit.textContent = 'A criar evento...';
   });
 }
 <?php endif; ?>
 
-// ========== FILTRO DE EVENTOS ==========
+// ===== FILTRO DE EVENTOS (Todos / A participar / Criados por mim) =====
 <?php if($utilizador_logado): ?>
 const utilizadorId = <?php echo intval($_SESSION['user']['utilizador_id']); ?>;
 
 document.querySelectorAll('.filtro-btn').forEach(btn => {
   btn.addEventListener('click', function() {
-    // Remover classe ativo de todos
+    // highlight
     document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
-    // Adicionar ao clicado
     this.classList.add('ativo');
-    
+
     const filtro = this.dataset.filtro;
-    const cards = document.querySelectorAll('.evento-card');
-    
-    cards.forEach(card => {
-      const criadorId = parseInt(card.dataset.criador);
-      
-      if (filtro === 'todos') {
-        card.style.display = 'block';
-      } else if (filtro === 'criados') {
-        card.style.display = (criadorId === utilizadorId) ? 'block' : 'none';
-      }
+    document.querySelectorAll('.evento-card').forEach(card => {
+      const criador   = parseInt(card.dataset.criador);
+      const participa = card.dataset.participa === '1';
+      let mostrar = true;
+
+      if      (filtro === 'criados')   mostrar = (criador === utilizadorId);
+      else if (filtro === 'participa') mostrar = participa;
+      // 'todos' → mostrar = true (já definido)
+
+      card.style.display = mostrar ? '' : 'none';
     });
   });
 });
 <?php endif; ?>
 
-// ========== REDIRECIONAR PARA LOGIN ==========
+// ===== PARTICIPAR / CANCELAR (AJAX) =====
+<?php if($utilizador_logado): ?>
+function toggleParticipacao(btn) {
+  const card     = btn.closest('.evento-card');
+  const eventoId = card.dataset.evento;
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  const formData = new FormData();
+  formData.append('evento_id', eventoId);
+
+  fetch('participar_evento.php', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.erro) {
+        alert(data.erro);
+        btn.disabled = false;
+        btn.textContent = 'Participar';
+        return;
+      }
+
+      if (data.estado === 'inscrito') {
+        card.dataset.participa = '1';
+        btn.classList.add('btn-parar');
+        btn.textContent = '✓ Já Inscrito';
+      } else {
+        card.dataset.participa = '0';
+        btn.classList.remove('btn-parar');
+        btn.textContent = 'Participar';
+      }
+      btn.disabled = false;
+    })
+    .catch(() => {
+      alert('Erro de conexão. Tente novamente.');
+      btn.disabled = false;
+      btn.textContent = 'Participar';
+    });
+}
+<?php endif; ?>
+
+// ===== REDIRECIONAR PARA LOGIN (utilizador não logado) =====
 function redirecionarLogin() {
   if (confirm('Precisa fazer login para participar. Deseja ir para a página de login?')) {
     window.location.href = 'login.php';
   }
 }
 
-// ========== REMOVER MENSAGENS APÓS 5 SEGUNDOS ==========
+// ===== REMOVER MENSAGENS APÓS 5s =====
 setTimeout(() => {
-  const mensagens = document.querySelectorAll('.mensagem');
-  mensagens.forEach(msg => {
+  document.querySelectorAll('.mensagem').forEach(msg => {
     msg.style.transition = 'opacity 0.5s';
     msg.style.opacity = '0';
     setTimeout(() => msg.remove(), 500);
   });
 }, 5000);
 
-// ========== SCROLL SUAVE ==========
+// ===== SCROLL SUAVE =====
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function(e) {
     const href = this.getAttribute('href');
     if (href !== '#') {
       e.preventDefault();
       const target = document.querySelector(href);
-      if (target) {
-        target.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-      }
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   });
 });
