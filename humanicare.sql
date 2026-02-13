@@ -1,7 +1,7 @@
 -- ============================================
--- SCRIPT COMPLETO E CORRIGIDO - HUMANICARE
+-- SCRIPT COMPLETO E ATUALIZADO - HUMANICARE
 -- Base de Dados: humanicare
--- Versão: 2.0 (Corrigida)
+-- Versão: 3.0 (COM FOTO DE PERFIL E MÚLTIPLAS IMAGENS)
 -- Data: 2025
 -- ============================================
 
@@ -18,6 +18,7 @@ SET time_zone = "+00:00";
 -- ============================================
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS evento_imagem;
 DROP TABLE IF EXISTS participa;
 DROP TABLE IF EXISTS evento;
 DROP TABLE IF EXISTS utilizador;
@@ -25,12 +26,13 @@ DROP TABLE IF EXISTS utilizador;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
--- 3. CRIAR TABELA UTILIZADOR
+-- 3. CRIAR TABELA UTILIZADOR (COM FOTO DE PERFIL)
 -- ============================================
 CREATE TABLE utilizador (
     utilizador_id INT NOT NULL AUTO_INCREMENT,
     nome VARCHAR(200) NOT NULL,
     email VARCHAR(100) NOT NULL,
+    foto_perfil VARCHAR(255) NULL,
     senha VARCHAR(255) NOT NULL,
     telefone VARCHAR(20) NULL,
     data_registo TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -69,7 +71,28 @@ CREATE TABLE evento (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================
--- 5. CRIAR TABELA PARTICIPA
+-- 5. CRIAR TABELA EVENTO_IMAGEM (NOVA - MÚLTIPLAS IMAGENS)
+-- ============================================
+CREATE TABLE evento_imagem (
+    imagem_id INT NOT NULL AUTO_INCREMENT,
+    evento_id INT NOT NULL,
+    nome_ficheiro VARCHAR(255) NOT NULL,
+    ordem INT NOT NULL DEFAULT 0,
+    data_upload TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (imagem_id),
+    INDEX idx_evento (evento_id),
+    INDEX idx_ordem (ordem),
+    
+    CONSTRAINT fk_evento_imagem_evento 
+        FOREIGN KEY (evento_id) 
+        REFERENCES evento(evento_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================
+-- 6. CRIAR TABELA PARTICIPA
 -- ============================================
 CREATE TABLE participa (
     evento_id INT NOT NULL,
@@ -94,7 +117,7 @@ CREATE TABLE participa (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================
--- 6. INSERIR UTILIZADORES DE TESTE
+-- 7. INSERIR UTILIZADORES DE TESTE
 -- ============================================
 INSERT INTO utilizador (nome, email, senha, telefone) VALUES
 ('João Silva', 'joao.silva@email.com', '123456', '912345678'),
@@ -105,7 +128,7 @@ INSERT INTO utilizador (nome, email, senha, telefone) VALUES
 ('Sofia Oliveira', 'sofia.oliveira@email.com', '123456', '917890123');
 
 -- ============================================
--- 7. INSERIR EVENTOS DE TESTE
+-- 8. INSERIR EVENTOS DE TESTE
 -- ============================================
 INSERT INTO evento (nome, descricao, data_evento, local_evento, vagas, utilizador_id) VALUES
 ('Limpeza da Praia de Matosinhos', 'Ação de voluntariado para limpeza da praia. Traga luvas e sacos do lixo. Vamos juntos manter as nossas praias limpas!', '2026-02-15', 'Praia de Matosinhos, Porto', 50, 1),
@@ -133,7 +156,7 @@ INSERT INTO evento (nome, descricao, data_evento, local_evento, vagas, utilizado
 ('Limpeza das Margens do Rio Douro', 'Ação de limpeza das margens do Rio Douro. Proteja o nosso rio e a biodiversidade local.', '2026-03-25', 'Cais de Gaia', 45, 6);
 
 -- ============================================
--- 8. INSERIR PARTICIPAÇÕES DE TESTE
+-- 9. INSERIR PARTICIPAÇÕES DE TESTE
 -- ============================================
 INSERT INTO participa (evento_id, utilizador_id) VALUES
 -- Evento 1: Limpeza da Praia
@@ -173,7 +196,7 @@ INSERT INTO participa (evento_id, utilizador_id) VALUES
 (12, 2), (12, 3), (12, 4), (12, 5);
 
 -- ============================================
--- 9. ESTATÍSTICAS E VERIFICAÇÕES
+-- 10. ESTATÍSTICAS E VERIFICAÇÕES
 -- ============================================
 
 -- Ver total de utilizadores
@@ -215,7 +238,7 @@ GROUP BY u.utilizador_id
 ORDER BY COUNT(e.evento_id) DESC;
 
 -- ============================================
--- 10. VIEWS ÚTEIS (OPCIONAL)
+-- 11. VIEWS ÚTEIS (OPCIONAL)
 -- ============================================
 
 -- View: Eventos com informação completa
@@ -231,6 +254,7 @@ SELECT
     e.data_criacao,
     u.nome as criador_nome,
     u.email as criador_email,
+    u.foto_perfil as criador_foto,
     COUNT(DISTINCT p.utilizador_id) as total_participantes
 FROM evento e
 JOIN utilizador u ON e.utilizador_id = u.utilizador_id
@@ -247,13 +271,14 @@ SELECT
     e.data_evento,
     e.local_evento,
     u.nome as participante_nome,
-    u.email as participante_email
+    u.email as participante_email,
+    u.foto_perfil as participante_foto
 FROM participa p
 JOIN evento e ON p.evento_id = e.evento_id
 JOIN utilizador u ON p.utilizador_id = u.utilizador_id;
 
 -- ============================================
--- 11. PROCEDURES ÚTEIS (OPCIONAL)
+-- 12. PROCEDURES ÚTEIS (OPCIONAL)
 -- ============================================
 
 -- Procedure: Inscrever utilizador em evento
@@ -284,7 +309,7 @@ END$$
 DELIMITER ;
 
 -- ============================================
--- 12. FINALIZAÇÃO
+-- 13. FINALIZAÇÃO
 -- ============================================
 
 COMMIT;
@@ -292,6 +317,6 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- Mensagem de sucesso
 SELECT '✅ Base de dados HUMANICARE criada com sucesso!' as 'STATUS';
-SELECT 'Utilize as credenciais de teste para login' as 'INFO';
+SELECT '✨ NOVIDADES: Foto de perfil e múltiplas imagens adicionadas!' as 'INFO';
 SELECT 'Email: joao.silva@email.com | Senha: 123456' as 'TESTE 1';
 SELECT 'Email: maria.santos@email.com | Senha: 123456' as 'TESTE 2';
