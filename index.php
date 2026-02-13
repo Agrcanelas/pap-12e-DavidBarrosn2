@@ -1,4 +1,23 @@
 <?php
+/**
+ * ========================================
+ * 🎉 INDEX.PHP CORRIGIDO - HumaniCare
+ * ========================================
+ * 
+ * ✅ CORREÇÕES IMPLEMENTADAS:
+ * 
+ * 1. ✅ Input de múltiplas imagens (até 5)
+ * 2. ✅ Preview visual das imagens selecionadas
+ * 3. ✅ Função para remover imagens do preview
+ * 4. ✅ Validação JavaScript para múltiplas imagens
+ * 5. ✅ Caminho correto das imagens (uploads/eventos/)
+ * 6. ✅ Link clicável para evento_detalhes.php
+ * 7. ✅ CSS completo para preview de imagens
+ * 8. ✅ Compatibilidade com guardar_evento.php
+ * 
+ * Data: 13/02/2025
+ * ========================================
+ */
 session_start();
 
 if (file_exists('db.php')) {
@@ -289,6 +308,80 @@ if ($utilizador_logado) {
       left: 12px;
       right: auto;
     }
+
+    /* ===== PREVIEW DE IMAGENS ===== */
+    #preview-imagens {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+      padding: 10px;
+      background: #f8f8f5;
+      border-radius: 8px;
+      border: 2px dashed #c8c0ae;
+    }
+
+    #preview-imagens:empty {
+      display: none;
+    }
+
+    .preview-container {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .preview-container:hover {
+      transform: scale(1.05);
+    }
+
+    .preview-img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      display: block;
+      border: 2px solid #58b79d;
+      border-radius: 8px;
+    }
+
+    .remove-preview {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(192, 57, 43, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .remove-preview:hover {
+      background: rgba(192, 57, 43, 1);
+      transform: scale(1.1);
+    }
+
+    .preview-numero {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      background: rgba(88, 183, 157, 0.9);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -442,9 +535,10 @@ if ($utilizador_logado) {
       </div>
     </div>
     <div class="form-group">
-      <label for="imagem">Imagem (opcional - máx 5MB)</label>
-      <input type="file" id="imagem" name="imagem" accept="image/jpeg,image/jpg,image/png,image/gif">
-      <small style="color: #666; font-size: 13px;">Formatos aceites: JPG, PNG, GIF</small>
+      <label for="imagens">Imagens (opcional - até 5 imagens, máx 5MB cada)</label>
+      <input type="file" id="imagens" name="imagens[]" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" multiple onchange="previewImagens(this)">
+      <small style="color: #666; font-size: 13px;">Formatos aceites: JPG, PNG, GIF, WEBP | Selecione até 5 imagens</small>
+      <div id="preview-imagens"></div>
     </div>
     <button type="submit" class="btn-submit" id="btnSubmit">Criar Evento</button>
   </form>
@@ -483,13 +577,17 @@ if ($utilizador_logado) {
            data-participa="<?php echo $participa_em ? '1' : '0'; ?>"
            onclick="abrirModal(<?php echo $eid; ?>)">
 
-        <?php if(!empty($evento['imagem']) && file_exists('uploads/' . $evento['imagem'])): ?>
-          <img src="uploads/<?php echo htmlspecialchars($evento['imagem']); ?>" 
+        <?php if(!empty($evento['imagem']) && file_exists('uploads/eventos/' . $evento['imagem'])): ?>
+          <img src="uploads/eventos/<?php echo htmlspecialchars($evento['imagem']); ?>" 
                alt="<?php echo htmlspecialchars($evento['nome']); ?>" 
                class="evento-img">
         <?php endif; ?>
         
-        <h4><?php echo htmlspecialchars($evento['nome']); ?></h4>
+        <h4>
+          <a href="evento_detalhes.php?id=<?php echo $eid; ?>" style="color: inherit; text-decoration: none; display: block;" title="Ver detalhes completos">
+            <?php echo htmlspecialchars($evento['nome']); ?>
+          </a>
+        </h4>
         
         <div class="evento-info">
           <p><strong>📅 Data:</strong> <?php echo date('d/m/Y', strtotime($evento['data_evento'])); ?></p>
@@ -608,7 +706,7 @@ function abrirModal(eventoId) {
   // Imagem
   const imgEl = document.getElementById('modalImagem');
   if (eventoAtual.imagem) {
-    imgEl.src = 'uploads/' + eventoAtual.imagem;
+    imgEl.src = 'uploads/eventos/' + eventoAtual.imagem;
     imgEl.style.display = 'block';
   } else {
     imgEl.style.display = 'none';
@@ -802,18 +900,34 @@ if (formEvento) {
       return false;
     }
 
-    const imagem = document.getElementById('imagem');
-    if (imagem.files.length > 0) {
-      const file = imagem.files[0];
-      if (file.size > 5 * 1024 * 1024) {
+    // Validação de múltiplas imagens
+    const imagens = document.getElementById('imagens');
+    if (imagens.files.length > 0) {
+      // Limitar a 5 imagens
+      if (imagens.files.length > 5) {
         e.preventDefault();
-        alert('A imagem é muito grande. Máximo 5MB.');
+        alert('Máximo de 5 imagens permitido.');
         return false;
       }
-      if (!['image/jpeg','image/jpg','image/png','image/gif'].includes(file.type)) {
-        e.preventDefault();
-        alert('Tipo de ficheiro inválido. Use JPG, PNG ou GIF.');
-        return false;
+      
+      // Validar cada imagem
+      for (let i = 0; i < imagens.files.length; i++) {
+        const file = imagens.files[i];
+        
+        // Validar tamanho (máx 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          e.preventDefault();
+          alert(`Imagem ${i + 1} é muito grande. Máximo 5MB por imagem.`);
+          return false;
+        }
+        
+        // Validar tipo
+        const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!tiposPermitidos.includes(file.type)) {
+          e.preventDefault();
+          alert(`Imagem ${i + 1} tem tipo inválido. Use JPG, PNG, GIF ou WEBP.`);
+          return false;
+        }
       }
     }
 
@@ -872,6 +986,83 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     }
   });
 });
+
+// ===== PREVIEW DE MÚLTIPLAS IMAGENS =====
+let imagensArray = [];
+
+function previewImagens(input) {
+  const preview = document.getElementById('preview-imagens');
+  preview.innerHTML = '';
+  
+  if (!input.files || input.files.length === 0) {
+    return;
+  }
+  
+  // Limitar a 5 imagens
+  const maxImagens = Math.min(input.files.length, 5);
+  if (input.files.length > 5) {
+    alert('⚠️ Máximo de 5 imagens permitido. Apenas as primeiras 5 serão carregadas.');
+  }
+  
+  imagensArray = Array.from(input.files).slice(0, 5);
+  
+  // Criar DataTransfer para atualizar o input
+  const dt = new DataTransfer();
+  imagensArray.forEach(file => dt.items.add(file));
+  input.files = dt.files;
+  
+  // Criar preview para cada imagem
+  imagensArray.forEach((file, index) => {
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+      const container = document.createElement('div');
+      container.classList.add('preview-container');
+      container.dataset.index = index;
+      
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.classList.add('preview-img');
+      img.alt = `Imagem ${index + 1}`;
+      
+      const btnRemove = document.createElement('button');
+      btnRemove.classList.add('remove-preview');
+      btnRemove.innerHTML = '×';
+      btnRemove.type = 'button';
+      btnRemove.onclick = function() {
+        removerImagem(index, input);
+      };
+      
+      const numero = document.createElement('span');
+      numero.classList.add('preview-numero');
+      numero.textContent = index + 1;
+      
+      container.appendChild(img);
+      container.appendChild(btnRemove);
+      container.appendChild(numero);
+      preview.appendChild(container);
+    };
+    
+    reader.readAsDataURL(file);
+  });
+}
+
+function removerImagem(index, input) {
+  imagensArray.splice(index, 1);
+  
+  // Atualizar o input
+  const dt = new DataTransfer();
+  imagensArray.forEach(file => dt.items.add(file));
+  input.files = dt.files;
+  
+  // Atualizar preview
+  previewImagens(input);
+  
+  // Mostrar mensagem
+  if (imagensArray.length === 0) {
+    document.getElementById('preview-imagens').innerHTML = '';
+  }
+}
 </script>
 
 </body>
