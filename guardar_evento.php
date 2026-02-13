@@ -1,7 +1,5 @@
 <?php
 session_start();
-
-// Ativar exibição de erros para debug
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -11,13 +9,11 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-// Verificar se é um POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: index.php");
     exit;
 }
 
-// Incluir conexão à BD
 require_once "db.php";
 
 try {
@@ -28,152 +24,189 @@ try {
     $local = trim($_POST['local']);
     $utilizador_id = $_SESSION['user']['utilizador_id'];
     
-    // DEBUG: Mostrar dados recebidos
-    echo "<!-- DEBUG INFO:<br>";
-    echo "Nome: " . htmlspecialchars($nome) . "<br>";
-    echo "Descrição: " . htmlspecialchars($descricao) . "<br>";
-    echo "Data: " . htmlspecialchars($data) . "<br>";
-    echo "Local: " . htmlspecialchars($local) . "<br>";
-    echo "Utilizador ID: " . htmlspecialchars($utilizador_id) . "<br>";
-    echo "-->";
-    
-    // Validar dados
+    // Validar dados básicos
     if (empty($nome) || empty($descricao) || empty($data) || empty($local)) {
         header("Location: index.php?erro=campos_vazios#criar-evento");
         exit;
     }
     
-    // Processar imagem (se enviada)
-    $imagem_nome = null;
+    // Criar diretórios se não existirem
+    if (!is_dir("uploads")) {
+        mkdir("uploads", 0755, true);
+    }
+    if (!is_dir("uploads/eventos")) {
+        mkdir("uploads/eventos", 0755, true);
+    }
     
-    if (!empty($_FILES['imagem']['name'])) {
-        $imagem = $_FILES['imagem'];
+    // Arrays para armazenar imagens
+    $imagens_guardadas = [];
+    $primeira_imagem = null;
+    
+    // Processar múltiplas imagens (até 5)
+    if (!empty($_FILES['imagens']['name'][0])) {
+        $total_imagens = count($_FILES['imagens']['name']);
         
-        // DEBUG: Info da imagem
-        echo "<!-- DEBUG IMAGEM:<br>";
-        echo "Nome: " . htmlspecialchars($imagem['name']) . "<br>";
-        echo "Tipo: " . htmlspecialchars($imagem['type']) . "<br>";
-        echo "Tamanho: " . $imagem['size'] . " bytes<br>";
-        echo "Erro: " . $imagem['error'] . "<br>";
-        echo "-->";
+        // Limitar a 5 imagens
+        $max_imagens = min($total_imagens, 5);
         
-        // Validar tipo de arquivo
-        $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime = finfo_file($finfo, $imagem['tmp_name']);
-        finfo_close($finfo);
-        
-        if (!in_array($mime, $tipos_permitidos)) {
-            header("Location: index.php?erro=tipo_imagem#criar-evento");
-            exit;
-        }
-        
-        // Validar tamanho (máx 5MB)
-        if ($imagem['size'] > 5 * 1024 * 1024) {
-            header("Location: index.php?erro=tamanho_imagem#criar-evento");
-            exit;
-        }
-        
-        // Criar diretório uploads se não existir
-        if (!is_dir("uploads")) {
-            if (!mkdir("uploads", 0755, true)) {
-                header("Location: index.php?erro=criar_pasta#criar-evento");
-                exit;
+        for ($i = 0; $i < $max_imagens; $i++) {
+            // Verificar se não houve erro no upload
+            if ($_FILES['imagens']['error'][$i] === UPLOAD_ERR_OK) {
+                $imagem_tmp = $_FILES['imagens']['tmp_name'][$i];
+                $imagem_nome_original = $_FILES['imagens']['name'][$i];
+                $imagem_size = $_FILES['imagens']['size'][$i];
+                
+                // Validar tipo MIME
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime = finfo_file($finfo, $imagem_tmp);
+                finfo_close($finfo);
+                
+                $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                
+                if (!in_array($mime, $tipos_permitidos)) {
+                    // Pular esta imagem se o tipo for inválido
+                    continue;
+                }
+                
+                // Validar tamanho (máx 5MB)
+                if ($imagem_size > 5 * 1024 * 1024) {
+                    // Pular esta imagem se for muito grande
+                    continue;
+                }
+                
+                // Gerar nome único
+                $extensao = pathinfo($imagem_nome_original, PATHINFO_EXTENSION);
+                $imagem_nome = 'evento_' . uniqid() . '_' . $i . '.' . strtolower($extensao);
+                
+                // Mover arquivo
+                if (move_uploaded_file($imagem_tmp, "uploads/eventos/" . $imagem_nome)) {
+                    $imagens_guardadas[] = [
+                        'nome' => $imagem_nome,
+                        'ordem' => $i
+                    ];
+                    
+                    // A primeira imagem é a capa
+                    if ($i === 0) {
+                        $primeira_imagem = $imagem_nome;
+                    }
+                }
             }
         }
+    }
+    // Se não houver múltiplas imagens, tentar upload único (compatibilidade)
+    elseif (!empty($_FILES['imagem']['name'])) {
+        $imagem = $_FILES['imagem'];
         
-        // Gerar nome único para a imagem
-        $extensao = pathinfo($imagem['name'], PATHINFO_EXTENSION);
-        $imagem_nome = uniqid('evento_') . '.' . strtolower($extensao);
-        
-        // Mover arquivo
-        if (!move_uploaded_file($imagem['tmp_name'], "uploads/" . $imagem_nome)) {
-            header("Location: index.php?erro=upload#criar-evento");
-            exit;
+        if ($imagem['error'] === UPLOAD_ERR_OK) {
+            // Validar tipo
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime = finfo_file($finfo, $imagem['tmp_name']);
+            finfo_close($finfo);
+            
+            $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            
+            if (!in_array($mime, $tipos_permitidos)) {
+                header("Location: index.php?erro=tipo_imagem#criar-evento");
+                exit;
+            }
+            
+            // Validar tamanho
+            if ($imagem['size'] > 5 * 1024 * 1024) {
+                header("Location: index.php?erro=tamanho_imagem#criar-evento");
+                exit;
+            }
+            
+            // Gerar nome único
+            $extensao = pathinfo($imagem['name'], PATHINFO_EXTENSION);
+            $imagem_nome = 'evento_' . uniqid() . '.' . strtolower($extensao);
+            
+            // Mover arquivo
+            if (move_uploaded_file($imagem['tmp_name'], "uploads/eventos/" . $imagem_nome)) {
+                $primeira_imagem = $imagem_nome;
+                $imagens_guardadas[] = [
+                    'nome' => $imagem_nome,
+                    'ordem' => 0
+                ];
+            }
         }
-        
-        echo "<!-- Imagem guardada: " . htmlspecialchars($imagem_nome) . " -->";
     }
     
-    // Verificar se a conexão PDO está ativa
-    if (!isset($pdo)) {
-        throw new Exception("Conexão PDO não está definida!");
-    }
-    
-    // Preparar SQL - IMPORTANTE: usar os nomes corretos das colunas
+    // Inserir evento na base de dados
     $sql = "INSERT INTO evento (nome, descricao, data_evento, local_evento, imagem, utilizador_id, data_criacao)
             VALUES (:nome, :descricao, :data_evento, :local_evento, :imagem, :utilizador_id, NOW())";
     
-    echo "<!-- SQL: " . htmlspecialchars($sql) . " -->";
-    
-    // Preparar statement
     $stmt = $pdo->prepare($sql);
-    
-    // Executar com os parâmetros
     $resultado = $stmt->execute([
         ':nome' => $nome,
         ':descricao' => $descricao,
         ':data_evento' => $data,
         ':local_evento' => $local,
-        ':imagem' => $imagem_nome,
+        ':imagem' => $primeira_imagem, // Imagem da capa (primeira)
         ':utilizador_id' => $utilizador_id
     ]);
     
     if ($resultado) {
         $evento_id = $pdo->lastInsertId();
-        echo "<!-- Evento criado com ID: " . $evento_id . " -->";
         
-        // Redirecionar com sucesso
+        // Inserir todas as imagens na tabela evento_imagem (se a tabela existir)
+        if (!empty($imagens_guardadas)) {
+            try {
+                $sql_img = "INSERT INTO evento_imagem (evento_id, nome_ficheiro, ordem) 
+                           VALUES (:evento_id, :nome_ficheiro, :ordem)";
+                $stmt_img = $pdo->prepare($sql_img);
+                
+                foreach ($imagens_guardadas as $img) {
+                    $stmt_img->execute([
+                        ':evento_id' => $evento_id,
+                        ':nome_ficheiro' => $img['nome'],
+                        ':ordem' => $img['ordem']
+                    ]);
+                }
+            } catch (PDOException $e) {
+                // Se a tabela evento_imagem não existir, apenas log (não falhar)
+                error_log("Aviso: Tabela evento_imagem pode não existir. " . $e->getMessage());
+            }
+        }
+        
+        // Sucesso - redirecionar
         header("Location: index.php?sucesso=1#eventosProjetos");
         exit;
     } else {
-        // Se execute retornar false
-        $errorInfo = $stmt->errorInfo();
-        echo "<!-- Erro PDO: " . print_r($errorInfo, true) . " -->";
-        throw new Exception("Execute retornou false");
+        throw new Exception("Erro ao executar INSERT");
     }
     
 } catch (PDOException $e) {
     // Erro de base de dados
-    $erro_msg = $e->getMessage();
-    $erro_code = $e->getCode();
+    error_log("ERRO BD ao guardar evento: " . $e->getMessage());
     
-    // Log detalhado do erro
-    error_log("ERRO AO GUARDAR EVENTO:");
-    error_log("Código: " . $erro_code);
-    error_log("Mensagem: " . $erro_msg);
-    error_log("Stack: " . $e->getTraceAsString());
-    
-    // Mostrar erro na página (apenas para debug - remover em produção)
-    echo "<h2>Erro ao guardar evento</h2>";
-    echo "<p><strong>Código:</strong> " . htmlspecialchars($erro_code) . "</p>";
-    echo "<p><strong>Mensagem:</strong> " . htmlspecialchars($erro_msg) . "</p>";
-    echo "<p><strong>Ficheiro:</strong> " . htmlspecialchars($e->getFile()) . "</p>";
-    echo "<p><strong>Linha:</strong> " . htmlspecialchars($e->getLine()) . "</p>";
-    echo "<hr>";
-    echo "<p>Por favor, copie esta informação e envie para diagnóstico.</p>";
-    echo "<p><a href='index.php'>Voltar</a></p>";
-    
-    // Apagar imagem se foi feito upload
-    if (isset($imagem_nome) && file_exists("uploads/" . $imagem_nome)) {
-        unlink("uploads/" . $imagem_nome);
+    // Apagar imagens se foram enviadas
+    if (!empty($imagens_guardadas)) {
+        foreach ($imagens_guardadas as $img) {
+            $path = "uploads/eventos/" . $img['nome'];
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
     }
     
-    // Comentado para mostrar erro completo
-    // header("Location: index.php?erro=bd#criar-evento");
+    header("Location: index.php?erro=bd#criar-evento");
     exit;
     
 } catch (Exception $e) {
     // Outros erros
-    echo "<h2>Erro geral</h2>";
-    echo "<p><strong>Mensagem:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
-    echo "<hr>";
-    echo "<p><a href='index.php'>Voltar</a></p>";
+    error_log("ERRO GERAL: " . $e->getMessage());
     
-    // Apagar imagem se foi feito upload
-    if (isset($imagem_nome) && file_exists("uploads/" . $imagem_nome)) {
-        unlink("uploads/" . $imagem_nome);
+    // Apagar imagens se foram enviadas
+    if (!empty($imagens_guardadas)) {
+        foreach ($imagens_guardadas as $img) {
+            $path = "uploads/eventos/" . $img['nome'];
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
     }
+    
+    header("Location: index.php?erro=geral#criar-evento");
     exit;
 }
 ?>
