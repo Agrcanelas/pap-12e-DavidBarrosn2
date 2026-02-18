@@ -95,6 +95,32 @@ CREATE TABLE participa (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Adicionar tabela de comentários ao projeto HumaniCare
+-- Execute este SQL no phpMyAdmin
+
+CREATE TABLE IF NOT EXISTS comentario (
+    comentario_id INT NOT NULL AUTO_INCREMENT,
+    evento_id     INT NOT NULL,
+    utilizador_id INT NOT NULL,
+    texto         TEXT NOT NULL,
+    data_comentario TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (comentario_id),
+    INDEX idx_evento (evento_id),
+    INDEX idx_utilizador (utilizador_id),
+    INDEX idx_data (data_comentario),
+
+    CONSTRAINT fk_comentario_evento
+        FOREIGN KEY (evento_id)
+        REFERENCES evento(evento_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    CONSTRAINT fk_comentario_utilizador
+        FOREIGN KEY (utilizador_id)
+        REFERENCES utilizador(utilizador_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- ============================================
 -- 7. INSERIR UTILIZADORES DE TESTE
 -- ============================================
