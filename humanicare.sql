@@ -18,7 +18,6 @@ SET time_zone = "+00:00";
 -- ============================================
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS evento_imagem;
 DROP TABLE IF EXISTS participa;
 DROP TABLE IF EXISTS evento;
 DROP TABLE IF EXISTS utilizador;
@@ -70,26 +69,6 @@ CREATE TABLE evento (
     CONSTRAINT chk_vagas CHECK (vagas >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- ============================================
--- 5. CRIAR TABELA EVENTO_IMAGEM (NOVA - MÚLTIPLAS IMAGENS)
--- ============================================
-CREATE TABLE evento_imagem (
-    imagem_id INT NOT NULL AUTO_INCREMENT,
-    evento_id INT NOT NULL,
-    nome_ficheiro VARCHAR(255) NOT NULL,
-    ordem INT NOT NULL DEFAULT 0,
-    data_upload TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
-    PRIMARY KEY (imagem_id),
-    INDEX idx_evento (evento_id),
-    INDEX idx_ordem (ordem),
-    
-    CONSTRAINT fk_evento_imagem_evento 
-        FOREIGN KEY (evento_id) 
-        REFERENCES evento(evento_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================
 -- 6. CRIAR TABELA PARTICIPA
