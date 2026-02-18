@@ -2,11 +2,11 @@
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = $_POST['nome'];
-    $email = $_POST['email'];
+    $nome     = trim($_POST['nome']);
+    $email    = trim($_POST['email']);
     $password = $_POST['password'];
 
-    $dsn = "mysql:host=localhost;dbname=humanicare;charset=utf8mb4";
+    $dsn     = "mysql:host=localhost;dbname=humanicare;charset=utf8mb4";
     $db_user = "root";
     $db_pass = "";
 
@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = new PDO($dsn, $db_user, $db_pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+        // Verificar se email já existe
         $stmt = $pdo->prepare("SELECT * FROM utilizador WHERE email = :email");
         $stmt->execute(['email' => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -21,18 +22,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user) {
             $erro = "Já existe um utilizador com este email.";
         } else {
-            $stmt = $pdo->prepare("INSERT INTO utilizador (nome, email, senha) VALUES (:nome, :email, :senha)");
-            $stmt->execute([
-                'nome' => $nome,
-                'email' => $email,
-                'senha' => $password
-            ]);
-            $_SESSION['user'] = [
-                'nome' => $nome,
-                'email' => $email
-            ];
-            header("Location: index.php");
-            exit;
+            $foto_perfil = null;
+
+            // Processar foto de perfil
+            if (!empty($_FILES['foto_perfil']['name'])) {
+                $foto = $_FILES['foto_perfil'];
+
+                if ($foto['error'] === UPLOAD_ERR_OK) {
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime  = finfo_file($finfo, $foto['tmp_name']);
+                    finfo_close($finfo);
+
+                    $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+
+                    if (!in_array($mime, $tipos_permitidos)) {
+                        $erro = "Tipo de imagem inválido. Use JPG, PNG ou GIF.";
+                    } elseif ($foto['size'] > 5 * 1024 * 1024) {
+                        $erro = "Imagem muito grande. Máximo 5MB.";
+                    } else {
+                        if (!is_dir("uploads/perfil")) {
+                            mkdir("uploads/perfil", 0755, true);
+                        }
+                        $extensao    = strtolower(pathinfo($foto['name'], PATHINFO_EXTENSION));
+                        $foto_perfil = 'perfil_' . uniqid() . '.' . $extensao;
+
+                        if (!move_uploaded_file($foto['tmp_name'], "uploads/perfil/" . $foto_perfil)) {
+                            $foto_perfil = null;
+                        }
+                    }
+                }
+            }
+
+            if (!isset($erro)) {
+                $stmt = $pdo->prepare("INSERT INTO utilizador (nome, email, senha, foto_perfil) VALUES (:nome, :email, :senha, :foto_perfil)");
+                $stmt->execute([
+                    'nome'        => $nome,
+                    'email'       => $email,
+                    'senha'       => $password,
+                    'foto_perfil' => $foto_perfil
+                ]);
+
+                $utilizador_id = $pdo->lastInsertId();
+
+                $_SESSION['user'] = [
+                    'utilizador_id' => $utilizador_id,
+                    'nome'          => $nome,
+                    'email'         => $email,
+                    'foto_perfil'   => $foto_perfil
+                ];
+
+                header("Location: index.php");
+                exit;
+            }
         }
     } catch (PDOException $e) {
         $erro = "Erro de conexão: " . $e->getMessage();
@@ -47,12 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Registar - HumaniCare</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Estilos específicos para a página de registo */
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
+body { display: flex; flex-direction: column; min-height: 100vh; }
 
 .container {
   flex: 1;
@@ -83,9 +119,7 @@ body {
   padding-bottom: 15px;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
+.form-group { margin-bottom: 20px; }
 
 .form-group label {
   display: block;
@@ -115,6 +149,65 @@ body {
   box-shadow: 0 0 0 3px rgba(88, 183, 157, 0.1);
 }
 
+/* --- Área de upload de foto --- */
+.foto-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  border: 2px dashed #c8c0ae;
+  border-radius: 10px;
+  background: #fafafa;
+  transition: border-color 0.3s, background 0.3s;
+  cursor: pointer;
+}
+
+.foto-upload-area:hover {
+  border-color: #58b79d;
+  background: #f0faf7;
+}
+
+#preview-img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #58b79d;
+  display: none;
+}
+
+.foto-placeholder {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #58b79d, #7a8c3c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 40px;
+}
+
+.foto-upload-area input[type="file"] { display: none; }
+
+.btn-escolher-foto {
+  background: #58b79d;
+  color: white;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.btn-escolher-foto:hover { background: #4a9c82; }
+
+.foto-hint { font-size: 13px; color: #999; text-align: center; }
+
+/* --- Botão submit --- */
 .btn-submit {
   width: 100%;
   background: linear-gradient(135deg, #58b79d 0%, #4a9c82 100%);
@@ -142,17 +235,8 @@ body {
   border-top: 1px solid #e0e0e0;
 }
 
-.extra-links a {
-  text-decoration: none;
-  color: #58b79d;
-  font-weight: bold;
-  transition: color 0.3s;
-}
-
-.extra-links a:hover {
-  color: #4a9c82;
-  text-decoration: underline;
-}
+.extra-links a { text-decoration: none; color: #58b79d; font-weight: bold; }
+.extra-links a:hover { color: #4a9c82; text-decoration: underline; }
 
 .erro {
   color: #c0392b;
@@ -173,9 +257,7 @@ body {
   letter-spacing: 2px;
 }
 
-.page-title span {
-  color: #9dbb52;
-}
+.page-title span { color: #9dbb52; }
 </style>
 </head>
 <body>
@@ -204,27 +286,45 @@ body {
       <p class="erro"><?php echo htmlspecialchars($erro); ?></p>
     <?php endif; ?>
 
-    <form method="POST" action="">
+    <form method="POST" action="" enctype="multipart/form-data">
+
+      <!-- Foto de Perfil -->
+      <div class="form-group">
+        <label>Foto de Perfil <span style="color:#999; font-weight:normal;">(opcional)</span></label>
+        <div class="foto-upload-area" onclick="document.getElementById('foto_perfil').click()">
+          <div class="foto-placeholder" id="foto-placeholder">👤</div>
+          <img id="preview-img" src="" alt="Preview da foto">
+          <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" onchange="previewFoto(this)">
+          <button type="button" class="btn-escolher-foto">📷 Escolher Foto</button>
+          <span class="foto-hint">JPG, PNG ou GIF · Máx. 5MB</span>
+        </div>
+      </div>
+
+      <!-- Nome -->
       <div class="form-group">
         <label for="nome">Nome</label>
-        <input type="text" id="nome" name="nome" required>
+        <input type="text" id="nome" name="nome" placeholder="O seu nome completo" required
+               value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>">
       </div>
 
+      <!-- Email -->
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="text" id="email" name="email" required>
+        <input type="text" id="email" name="email" placeholder="exemplo@email.com" required
+               value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
       </div>
 
+      <!-- Palavra-passe -->
       <div class="form-group">
         <label for="password">Palavra-passe</label>
-        <input type="password" id="password" name="password" required>
+        <input type="password" id="password" name="password" placeholder="Crie uma palavra-passe" required>
       </div>
 
       <button type="submit" class="btn-submit">Registar</button>
     </form>
 
     <div class="extra-links">
-      <p>Já tem conta? <a href="login.php">Faça login</a></p>
+      <p>Já tem conta? <a href="login.php">Fazer login</a></p>
     </div>
   </div>
 </main>
@@ -232,6 +332,22 @@ body {
 <footer>
   <p>© 2025 HumaniCare - Juntos por um futuro melhor 🌿</p>
 </footer>
+
+<script>
+function previewFoto(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img         = document.getElementById('preview-img');
+      const placeholder = document.getElementById('foto-placeholder');
+      img.src           = e.target.result;
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
 
 </body>
 </html>

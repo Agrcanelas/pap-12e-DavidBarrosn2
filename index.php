@@ -1,63 +1,33 @@
 <?php
-/**
- * ========================================
- * 🎉 INDEX.PHP CORRIGIDO - HumaniCare
- * ========================================
- * 
- * ✅ CORREÇÕES IMPLEMENTADAS:
- * 
- * 1. ✅ Input de múltiplas imagens (até 5)
- * 2. ✅ Preview visual das imagens selecionadas
- * 3. ✅ Função para remover imagens do preview
- * 4. ✅ Validação JavaScript para múltiplas imagens
- * 5. ✅ Caminho correto das imagens (uploads/eventos/)
- * 6. ✅ Link clicável para evento_detalhes.php
- * 7. ✅ CSS completo para preview de imagens
- * 8. ✅ Compatibilidade com guardar_evento.php
- * 
- * Data: 13/02/2025
- * ========================================
- */
 session_start();
 
-if (file_exists('db.php')) {
-    require_once 'db.php';
-} else {
-    die("Erro: Ficheiro db.php não encontrado!");
-}
+if (file_exists('db.php')) { require_once 'db.php'; }
+else { die("Erro: db.php não encontrado!"); }
 
-// ---------- Buscar eventos ----------
 $eventos = [];
 $erro_eventos = null;
 
 try {
     $stmt = $pdo->query("
-        SELECT e.*, u.nome as criador_nome,
+        SELECT e.*, u.nome as criador_nome, u.foto_perfil as criador_foto,
         (SELECT COUNT(*) FROM participa WHERE evento_id = e.evento_id) as total_participantes
-        FROM evento e 
-        JOIN utilizador u ON e.utilizador_id = u.utilizador_id 
+        FROM evento e
+        JOIN utilizador u ON e.utilizador_id = u.utilizador_id
         ORDER BY e.data_criacao DESC
     ");
     $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $erro_eventos = "Erro ao carregar eventos.";
-    error_log("Erro BD: " . $e->getMessage());
 }
 
 $utilizador_logado = isset($_SESSION['user']);
-
-// ---------- Buscar participações do utilizador logado ----------
 $participacoes = [];
 if ($utilizador_logado) {
     try {
-        $stmt = $pdo->prepare(
-            "SELECT evento_id FROM participa WHERE utilizador_id = :uid"
-        );
+        $stmt = $pdo->prepare("SELECT evento_id FROM participa WHERE utilizador_id = :uid");
         $stmt->execute([':uid' => $_SESSION['user']['utilizador_id']]);
         $participacoes = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'evento_id');
-    } catch (PDOException $e) {
-        error_log("Erro ao buscar participações: " . $e->getMessage());
-    }
+    } catch (PDOException $e) {}
 }
 ?>
 <!doctype html>
@@ -68,320 +38,180 @@ if ($utilizador_logado) {
   <title>HumaniCare</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ===== ESTILOS DO POP-UP ===== */
+    /* ===== MODAL ===== */
     .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      animation: fadeIn 0.3s ease;
+      display:none; position:fixed; z-index:1000;
+      left:0; top:0; width:100%; height:100%;
+      overflow:hidden; background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(4px); animation:fadeIn .3s ease;
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     .modal-content {
-      background: white;
-      margin: 3% auto;
-      padding: 0;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 700px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      animation: slideDown 0.4s ease;
-      overflow: hidden;
+      background:white; margin:1.5% auto;
+      border-radius:16px; width:90%; max-width:720px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.3);
+      animation:slideDown .35s ease;
+      overflow:hidden; display:flex; flex-direction:column;
+      max-height:96vh;
     }
-
-    @keyframes slideDown {
-      from {
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
+    @keyframes slideDown{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
 
     .modal-header {
-      background: linear-gradient(135deg, #58b79d 0%, #4a9c82 100%);
-      color: white;
-      padding: 24px 30px;
-      position: relative;
+      background:linear-gradient(135deg,#58b79d,#4a9c82);
+      color:white; padding:20px 28px; position:relative; flex-shrink:0;
     }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 26px;
-      padding-right: 40px;
-    }
-
+    .modal-header h2{margin:0;font-size:22px;padding-right:40px;}
     .close {
-      color: white;
-      position: absolute;
-      right: 20px;
-      top: 20px;
-      font-size: 32px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      transition: all 0.3s ease;
-      background: rgba(255, 255, 255, 0.2);
+      color:white; position:absolute; right:16px; top:16px;
+      font-size:28px; font-weight:bold; cursor:pointer;
+      width:32px; height:32px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,0.2); transition:all .3s;
     }
+    .close:hover{background:rgba(255,255,255,0.35);transform:rotate(90deg);}
 
-    .close:hover,
-    .close:focus {
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(90deg);
-    }
+    .modal-body{padding:22px 28px;overflow-y:auto;flex:1;}
 
-    .modal-body {
-      padding: 30px;
-    }
+    .modal-image{width:100%;height:240px;object-fit:cover;border-radius:10px;margin-bottom:18px;}
 
-    .modal-image {
-      width: 100%;
-      height: 300px;
-      object-fit: cover;
-      border-radius: 12px;
-      margin-bottom: 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    /* Criador */
+    .modal-criador {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 14px; background:#f0faf7;
+      border-radius:10px; border:2px solid #c8e6de; margin-bottom:14px;
     }
-
-    .modal-info {
-      margin-bottom: 20px;
+    .modal-criador-foto {
+      width:46px; height:46px; border-radius:50%;
+      object-fit:cover; border:2px solid #58b79d; flex-shrink:0;
     }
+    .modal-criador-placeholder {
+      width:46px; height:46px; border-radius:50%;
+      background:linear-gradient(135deg,#58b79d,#7a8c3c);
+      display:flex; align-items:center; justify-content:center;
+      color:white; font-weight:bold; font-size:19px; flex-shrink:0;
+    }
+    .modal-criador-info small{color:#666;font-size:11px;display:block;}
+    .modal-criador-info strong{color:#3a7a62;font-size:15px;}
 
     .modal-info-item {
-      display: flex;
-      align-items: start;
-      margin-bottom: 16px;
-      padding: 12px;
-      background: #f8f8f5;
-      border-radius: 8px;
-      border-left: 4px solid #58b79d;
+      display:flex; align-items:center; margin-bottom:10px;
+      padding:9px 12px; background:#f8f8f5;
+      border-radius:8px; border-left:4px solid #58b79d; gap:10px;
     }
+    .modal-info-item .icon{font-size:17px;}
+    .modal-info-item .label{font-weight:bold;color:#4a4a4a;min-width:60px;}
+    .modal-info-item .value{color:#555;flex:1;}
 
-    .modal-info-item .icon {
-      font-size: 20px;
-      margin-right: 12px;
-      min-width: 24px;
-    }
-
-    .modal-info-item .label {
-      font-weight: bold;
-      color: #4a4a4a;
-      margin-right: 8px;
-    }
-
-    .modal-info-item .value {
-      color: #555;
-      flex: 1;
+    .participantes-count {
+      display:inline-flex; align-items:center; gap:8px;
+      background:white; padding:6px 14px; border-radius:20px;
+      font-size:13px; font-weight:bold; color:#58b79d;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:14px;
     }
 
     .modal-description {
-      background: #f8f8f5;
-      padding: 20px;
-      border-radius: 12px;
-      border: 2px solid #e0e0e0;
-      margin-bottom: 24px;
+      background:#f8f8f5; padding:16px; border-radius:10px;
+      border:2px solid #e0e0e0; margin-bottom:18px;
+    }
+    .modal-description h3{margin:0 0 8px;color:#7a8c3c;font-size:15px;}
+    .modal-description p{margin:0;line-height:1.7;color:#555;white-space:pre-line;}
+
+    /* ===== COMENTÁRIOS ===== */
+    .comentarios-secao{border-top:2px solid #e8e8e8;padding-top:18px;}
+    .comentarios-secao h3{color:#7a8c3c;margin:0 0 14px;font-size:16px;}
+    .comentarios-lista{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+
+    .comentario-item{display:flex;gap:10px;align-items:flex-start;}
+    .comentario-foto{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #58b79d;flex-shrink:0;}
+    .comentario-placeholder{
+      width:36px;height:36px;border-radius:50%;
+      background:linear-gradient(135deg,#58b79d,#7a8c3c);
+      display:flex;align-items:center;justify-content:center;
+      color:white;font-weight:bold;font-size:14px;flex-shrink:0;
+    }
+    .comentario-balao{
+      background:#f4f4f0;border-radius:0 10px 10px 10px;
+      padding:9px 13px;flex:1;border:1px solid #e8e8e8;
+    }
+    .comentario-autor{
+      font-weight:bold;color:#3a7a62;font-size:13px;
+      cursor:pointer;text-decoration:none;display:inline-block;margin-bottom:3px;
+    }
+    .comentario-autor:hover{text-decoration:underline;}
+    .comentario-texto{color:#444;font-size:14px;line-height:1.5;word-break:break-word;}
+    .comentario-data{color:#bbb;font-size:11px;margin-top:4px;}
+    .sem-comentarios{color:#bbb;font-size:14px;text-align:center;padding:14px;}
+
+    .comentario-form{display:flex;gap:9px;align-items:flex-start;}
+    .comentario-form textarea{
+      flex:1;padding:9px 13px;border:2px solid #c8c0ae;
+      border-radius:8px;font-family:inherit;font-size:14px;
+      resize:vertical;min-height:56px;transition:border-color .3s;
+    }
+    .comentario-form textarea:focus{outline:none;border-color:#58b79d;}
+    .btn-comentar{
+      background:linear-gradient(135deg,#58b79d,#4a9c82);
+      color:white;border:none;padding:9px 16px;border-radius:8px;
+      font-weight:bold;cursor:pointer;font-size:14px;
+      transition:all .3s;white-space:nowrap;align-self:flex-end;
+    }
+    .btn-comentar:hover{transform:translateY(-2px);}
+    .btn-comentar:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .login-para-comentar{
+      text-align:center;color:#888;font-size:14px;
+      padding:10px;background:#f8f8f5;border-radius:8px;
+    }
+    .login-para-comentar a{color:#58b79d;font-weight:bold;}
+
+    /* Modal footer */
+    .modal-footer{
+      padding:14px 28px;background:#f8f8f5;
+      border-top:2px solid #e0e0e0;
+      display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;
+    }
+    .modal-btn{
+      padding:10px 22px;border-radius:8px;border:none;
+      font-size:15px;font-weight:bold;cursor:pointer;
+      transition:all .3s;font-family:inherit;
+    }
+    .modal-btn-participar{background:linear-gradient(135deg,#58b79d,#4a9c82);color:white;}
+    .modal-btn-participar:hover{transform:translateY(-2px);}
+    .modal-btn-participar.inscrito{background:linear-gradient(135deg,#c0392b,#a0301f);}
+    .modal-btn-eliminar{background:linear-gradient(135deg,#e74c3c,#c0392b);color:white;}
+    .modal-btn-eliminar:hover{transform:translateY(-2px);}
+    .modal-btn-fechar{background:#e0e0e0;color:#4a4a4a;}
+    .modal-btn-fechar:hover{background:#d0d0d0;}
+    .modal-btn:disabled{opacity:.6;cursor:not-allowed;transform:none!important;}
+
+    /* Header utilizador com foto */
+    a.usuario-logado{
+      display:flex;align-items:center;gap:8px;
+      font-weight:bold;color:#58b79d;font-size:14px;
+      padding:6px 14px;background:white;border-radius:20px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);text-decoration:none;
+      transition:all .3s;
+    }
+    a.usuario-logado:hover{box-shadow:0 4px 12px rgba(88,183,157,0.3);transform:translateY(-1px);}
+    .user-foto-mini{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #58b79d;}
+    .user-placeholder-mini{
+      width:30px;height:30px;border-radius:50%;
+      background:linear-gradient(135deg,#58b79d,#7a8c3c);
+      display:flex;align-items:center;justify-content:center;
+      color:white;font-weight:bold;font-size:13px;
     }
 
-    .modal-description h3 {
-      margin: 0 0 12px 0;
-      color: #7a8c3c;
-      font-size: 18px;
-    }
+    .evento-card{cursor:pointer;}
+    .evento-card:active{transform:scale(0.98);}
 
-    .modal-description p {
-      margin: 0;
-      line-height: 1.7;
-      color: #555;
-      text-align: justify;
-      white-space: pre-line;
+    /* Preview */
+    #preview-imagens{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+      gap:10px;margin-top:14px;padding:10px;
+      background:#f8f8f5;border-radius:8px;border:2px dashed #c8c0ae;
     }
-
-    .modal-footer {
-      padding: 20px 30px;
-      background: #f8f8f5;
-      border-top: 2px solid #e0e0e0;
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-    }
-
-    .modal-btn {
-      padding: 12px 28px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-family: inherit;
-    }
-
-    .modal-btn-participar {
-      background: linear-gradient(135deg, #58b79d 0%, #4a9c82 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(88, 183, 157, 0.3);
-    }
-
-    .modal-btn-participar:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(88, 183, 157, 0.4);
-    }
-
-    .modal-btn-participar.inscrito {
-      background: linear-gradient(135deg, #c0392b, #a0301f);
-    }
-
-    .modal-btn-participar.inscrito:hover {
-      background: linear-gradient(135deg, #a0301f, #8b2818);
-    }
-
-    .modal-btn-eliminar {
-      background: linear-gradient(135deg, #e74c3c, #c0392b);
-      color: white;
-      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-    }
-
-    .modal-btn-eliminar:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
-    }
-
-    .modal-btn-fechar {
-      background: #e0e0e0;
-      color: #4a4a4a;
-    }
-
-    .modal-btn-fechar:hover {
-      background: #d0d0d0;
-    }
-
-    .modal-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    .participantes-count {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: bold;
-      color: #58b79d;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin-top: 12px;
-    }
-
-    /* Efeito de clique nos cards */
-    .evento-card {
-      cursor: pointer;
-    }
-
-    .evento-card:active {
-      transform: scale(0.98);
-    }
-
-    /* Badge de eliminação */
-    .badge.eliminar-badge {
-      background: linear-gradient(135deg, #e74c3c, #c0392b);
-      left: 12px;
-      right: auto;
-    }
-
-    /* ===== PREVIEW DE IMAGENS ===== */
-    #preview-imagens {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 10px;
-      margin-top: 15px;
-      padding: 10px;
-      background: #f8f8f5;
-      border-radius: 8px;
-      border: 2px dashed #c8c0ae;
-    }
-
-    #preview-imagens:empty {
-      display: none;
-    }
-
-    .preview-container {
-      position: relative;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
-    }
-
-    .preview-container:hover {
-      transform: scale(1.05);
-    }
-
-    .preview-img {
-      width: 100%;
-      height: 100px;
-      object-fit: cover;
-      display: block;
-      border: 2px solid #58b79d;
-      border-radius: 8px;
-    }
-
-    .remove-preview {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background: rgba(192, 57, 43, 0.9);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-
-    .remove-preview:hover {
-      background: rgba(192, 57, 43, 1);
-      transform: scale(1.1);
-    }
-
-    .preview-numero {
-      position: absolute;
-      bottom: 5px;
-      left: 5px;
-      background: rgba(88, 183, 157, 0.9);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-    }
+    #preview-imagens:empty{display:none;}
+    .preview-container{position:relative;border-radius:8px;overflow:hidden;}
+    .preview-img{width:100%;height:96px;object-fit:cover;border:2px solid #58b79d;border-radius:8px;display:block;}
   </style>
 </head>
 <body>
@@ -389,15 +219,17 @@ if ($utilizador_logado) {
 <header>
   <div class="header-container">
     <h1 class="logo">HUMANI <span>CARE</span></h1>
-    
+
     <?php if($utilizador_logado): ?>
-      <div class="usuario-logado">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        Olá, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?>
-      </div>
+      <?php $u = $_SESSION['user']; ?>
+      <a href="perfil.php" class="usuario-logado" title="O meu perfil">
+        <?php if(!empty($u['foto_perfil']) && file_exists('uploads/perfil/'.$u['foto_perfil'])): ?>
+          <img src="uploads/perfil/<?php echo htmlspecialchars($u['foto_perfil']); ?>" class="user-foto-mini" alt="Foto">
+        <?php else: ?>
+          <div class="user-placeholder-mini"><?php echo strtoupper(substr($u['nome'],0,1)); ?></div>
+        <?php endif; ?>
+        <?php echo htmlspecialchars($u['nome']); ?>
+      </a>
     <?php endif; ?>
 
     <nav class="nav-links">
@@ -418,16 +250,14 @@ if ($utilizador_logado) {
 
 <main class="container">
 
-<!-- ===== BANNER ===== -->
 <section class="banner">
   <div class="banner-text">
     <h2>Junte-se ao movimento!</h2>
-    <p>Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
-      Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje 
-      e garantindo um futuro sustentável para as próximas gerações.</p>
+    <p>Participe em atividades práticas de preservação, reflorestamento e educação ambiental.
+      Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje e garantindo
+      um futuro sustentável para as próximas gerações.</p>
     <a href="#envolva" class="btn-cta">Comece Agora</a>
   </div>
-  
   <div class="banner-img">
     <div class="slideshow-container">
       <div class="mySlides fade">
@@ -449,7 +279,7 @@ if ($utilizador_logado) {
       <a class="prev" onclick="plusSlides(-1)">❮</a>
       <a class="next" onclick="plusSlides(1)">❯</a>
     </div>
-    <div style="text-align:center; padding: 10px 0;">
+    <div style="text-align:center;padding:10px 0;">
       <span class="dot" onclick="currentSlide(1)"></span>
       <span class="dot" onclick="currentSlide(2)"></span>
       <span class="dot" onclick="currentSlide(3)"></span>
@@ -458,63 +288,31 @@ if ($utilizador_logado) {
   </div>
 </section>
 
-<!-- ===== CARDS INFO ===== -->
 <section class="grid">
-  <div class="card" id="sobre">
-    <div class="card-icon">🌱</div>
-    <h3>Sobre</h3>
-    <p>Sou uma pessoa dedicada ao voluntariado e à promoção de práticas sustentáveis.</p>
-  </div>
-  <div class="card" id="projeto">
-    <div class="card-icon">🤝</div>
-    <h3>Projeto</h3>
-    <p>Desenvolvo projetos de voluntariado com a intenção de ajudar quem mais necessita.</p>
-  </div>
-  <div class="card" id="doacoes">
-    <div class="card-icon">💚</div>
-    <h3>Doações</h3>
-    <p>A sua doação ajuda-me a continuar o meu trabalho. Cada doação ajuda este website a melhorar.</p>
-  </div>
-  <div class="card" id="envolva">
-    <div class="card-icon">🌍</div>
-    <h3>Envolva-se</h3>
-    <p>Participe em atividades, crie eventos que pense que ajudem a comunidade e o planeta.</p>
-  </div>
+  <div class="card" id="sobre"><div class="card-icon">🌱</div><h3>Sobre</h3><p>Dedicado ao voluntariado e à promoção de práticas sustentáveis.</p></div>
+  <div class="card" id="projeto"><div class="card-icon">🤝</div><h3>Projeto</h3><p>Projetos de voluntariado para ajudar quem mais necessita.</p></div>
+  <div class="card" id="doacoes"><div class="card-icon">💚</div><h3>Doações</h3><p>A sua doação ajuda a continuar o trabalho e melhorar o website.</p></div>
+  <div class="card" id="envolva"><div class="card-icon">🌍</div><h3>Envolva-se</h3><p>Crie eventos e participe em atividades para a comunidade e o planeta.</p></div>
 </section>
 
-<!-- ===== CRIAR EVENTO ===== -->
 <section id="criar-evento">
 <?php if(!$utilizador_logado): ?>
-  <div class="login-prompt">
-    <p>✨ Para criar eventos faça <a href="login.php">login</a>.</p>
-  </div>
+  <div class="login-prompt"><p>✨ Para criar eventos faça <a href="login.php">login</a>.</p></div>
 <?php else: ?>
   <h3>✏️ Criar Evento</h3>
-  
-  <?php if(isset($_GET['sucesso']) && $_GET['sucesso'] == '1'): ?>
-    <div class="mensagem sucesso">✅ Evento criado com sucesso!</div>
-  <?php endif; ?>
-  
-  <?php if(isset($_GET['eliminado']) && $_GET['eliminado'] == '1'): ?>
-    <div class="mensagem sucesso">✅ Evento eliminado com sucesso!</div>
-  <?php endif; ?>
-  
+  <?php if(isset($_GET['sucesso'])): ?><div class="mensagem sucesso">✅ Evento criado com sucesso!</div><?php endif; ?>
+  <?php if(isset($_GET['eliminado'])): ?><div class="mensagem sucesso">✅ Evento eliminado!</div><?php endif; ?>
   <?php if(isset($_GET['erro'])): ?>
-    <div class="mensagem erro">
-      ❌ 
-      <?php 
-        switch($_GET['erro']) {
-          case 'campos_vazios':    echo 'Preencha todos os campos obrigatórios.'; break;
-          case 'tipo_imagem':      echo 'Tipo de imagem inválido. Use JPG, PNG ou GIF.'; break;
-          case 'tamanho_imagem':   echo 'Imagem muito grande. Máximo 5MB.'; break;
-          case 'upload':           echo 'Erro ao fazer upload da imagem.'; break;
-          case 'bd':               echo 'Erro ao guardar na base de dados. Verifique a conexão.'; break;
-          default:                 echo 'Erro ao criar evento. Tente novamente.';
-        }
-      ?>
-    </div>
+    <div class="mensagem erro">❌ <?php
+      switch($_GET['erro']){
+        case 'campos_vazios': echo 'Preencha todos os campos.'; break;
+        case 'tipo_imagem':   echo 'Tipo de imagem inválido.'; break;
+        case 'tamanho_imagem':echo 'Imagem demasiado grande (máx 5MB).'; break;
+        case 'bd':            echo 'Erro na base de dados.'; break;
+        default:              echo 'Erro ao criar evento.';
+      }
+    ?></div>
   <?php endif; ?>
-  
   <form action="guardar_evento.php" method="POST" enctype="multipart/form-data" id="formEvento">
     <div class="form-group">
       <label for="nome">Nome do Evento *</label>
@@ -535,9 +333,8 @@ if ($utilizador_logado) {
       </div>
     </div>
     <div class="form-group">
-      <label for="imagens">Imagens (opcional - até 5 imagens, máx 5MB cada)</label>
-      <input type="file" id="imagens" name="imagens[]" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" multiple onchange="previewImagens(this)">
-      <small style="color: #666; font-size: 13px;">Formatos aceites: JPG, PNG, GIF, WEBP | Selecione até 5 imagens</small>
+      <label for="imagem">Imagem (opcional · máx 5MB)</label>
+      <input type="file" id="imagem" name="imagem" accept="image/*" onchange="previewImagem(this)">
       <div id="preview-imagens"></div>
     </div>
     <button type="submit" class="btn-submit" id="btnSubmit">Criar Evento</button>
@@ -545,10 +342,8 @@ if ($utilizador_logado) {
 <?php endif; ?>
 </section>
 
-<!-- ===== EVENTOS ===== -->
 <section id="eventosProjetos">
   <h3 class="titulo-eventos">📅 Eventos</h3>
-
   <?php if($utilizador_logado): ?>
   <div class="filtro-eventos">
     <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
@@ -556,48 +351,34 @@ if ($utilizador_logado) {
     <button class="filtro-btn" data-filtro="criados">Criados por mim</button>
   </div>
   <?php endif; ?>
-
   <div class="eventos-grid">
   <?php if($erro_eventos): ?>
     <p class="mensagem-centro"><?php echo htmlspecialchars($erro_eventos); ?></p>
   <?php elseif(empty($eventos)): ?>
-    <p class="mensagem-centro">
-      Ainda não existem eventos criados. Seja o primeiro a criar um!
-    </p>
+    <p class="mensagem-centro">Ainda não existem eventos. Seja o primeiro!</p>
   <?php else: ?>
-    <?php foreach($eventos as $evento): ?>
+    <?php foreach($eventos as $ev): ?>
       <?php
-        $eid          = $evento['evento_id'];
-        $é_criador    = $utilizador_logado && ($_SESSION['user']['utilizador_id'] == $evento['utilizador_id']);
-        $participa_em = $utilizador_logado && in_array($eid, $participacoes);
+        $eid      = $ev['evento_id'];
+        $criador  = $utilizador_logado && $_SESSION['user']['utilizador_id'] == $ev['utilizador_id'];
+        $participa= $utilizador_logado && in_array($eid, $participacoes);
       ?>
       <div class="evento-card"
-           data-criador="<?php echo htmlspecialchars($evento['utilizador_id']); ?>"
+           data-criador="<?php echo $ev['utilizador_id']; ?>"
            data-evento="<?php echo $eid; ?>"
-           data-participa="<?php echo $participa_em ? '1' : '0'; ?>"
+           data-participa="<?php echo $participa?'1':'0'; ?>"
            onclick="abrirModal(<?php echo $eid; ?>)">
-
-        <?php if(!empty($evento['imagem']) && file_exists('uploads/eventos/' . $evento['imagem'])): ?>
-          <img src="uploads/eventos/<?php echo htmlspecialchars($evento['imagem']); ?>" 
-               alt="<?php echo htmlspecialchars($evento['nome']); ?>" 
-               class="evento-img">
+        <?php if(!empty($ev['imagem']) && file_exists('uploads/eventos/'.$ev['imagem'])): ?>
+          <img src="uploads/eventos/<?php echo htmlspecialchars($ev['imagem']); ?>"
+               alt="<?php echo htmlspecialchars($ev['nome']); ?>" class="evento-img">
         <?php endif; ?>
-        
-        <h4>
-          <a href="evento_detalhes.php?id=<?php echo $eid; ?>" style="color: inherit; text-decoration: none; display: block;" title="Ver detalhes completos">
-            <?php echo htmlspecialchars($evento['nome']); ?>
-          </a>
-        </h4>
-        
+        <h4><?php echo htmlspecialchars($ev['nome']); ?></h4>
         <div class="evento-info">
-          <p><strong>📅 Data:</strong> <?php echo date('d/m/Y', strtotime($evento['data_evento'])); ?></p>
-          <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($evento['local_evento']); ?></p>
-          <p><strong>👥 Participantes:</strong> <?php echo $evento['total_participantes']; ?></p>
+          <p><strong>📅 Data:</strong> <?php echo date('d/m/Y',strtotime($ev['data_evento'])); ?></p>
+          <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($ev['local_evento']); ?></p>
+          <p><strong>👥 Participantes:</strong> <?php echo $ev['total_participantes']; ?></p>
         </div>
-
-        <?php if($é_criador): ?>
-          <span class="badge criado">Criado por mim</span>
-        <?php endif; ?>
+        <?php if($criador): ?><span class="badge criado">Criado por mim</span><?php endif; ?>
       </div>
     <?php endforeach; ?>
   <?php endif; ?>
@@ -606,7 +387,7 @@ if ($utilizador_logado) {
 
 </main>
 
-<!-- ===== MODAL DE DETALHES ===== -->
+<!-- ===== MODAL ===== -->
 <div id="modalEvento" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -614,456 +395,370 @@ if ($utilizador_logado) {
       <span class="close" onclick="fecharModal()">&times;</span>
     </div>
     <div class="modal-body">
-      <img id="modalImagem" class="modal-image" style="display:none;" src="" alt="">
-      
+      <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
+
+      <!-- Criador com foto -->
+      <div class="modal-criador">
+        <div id="modalCriadorFoto"></div>
+        <div class="modal-criador-info">
+          <small>Organizado por</small>
+          <strong id="modalCriadorNome"></strong>
+        </div>
+      </div>
+
       <div class="modal-info">
         <div class="modal-info-item">
-          <span class="icon">📅</span>
-          <span class="label">Data:</span>
+          <span class="icon">📅</span><span class="label">Data:</span>
           <span class="value" id="modalData"></span>
         </div>
         <div class="modal-info-item">
-          <span class="icon">📍</span>
-          <span class="label">Local:</span>
+          <span class="icon">📍</span><span class="label">Local:</span>
           <span class="value" id="modalLocal"></span>
-        </div>
-        <div class="modal-info-item">
-          <span class="icon">👤</span>
-          <span class="label">Criado por:</span>
-          <span class="value" id="modalCriador"></span>
         </div>
       </div>
 
       <div class="participantes-count">
-        <span>👥</span>
-        <span id="modalParticipantes">0 participantes</span>
+        <span>👥</span><span id="modalParticipantes"></span>
       </div>
 
       <div class="modal-description">
         <h3>📝 Descrição</h3>
         <p id="modalDescricao"></p>
       </div>
+
+      <!-- COMENTÁRIOS -->
+      <div class="comentarios-secao">
+        <h3>💬 Comentários</h3>
+        <div class="comentarios-lista" id="comentariosLista">
+          <p class="sem-comentarios">A carregar...</p>
+        </div>
+
+        <?php if($utilizador_logado): ?>
+          <?php $u = $_SESSION['user']; ?>
+          <div class="comentario-form">
+            <?php if(!empty($u['foto_perfil']) && file_exists('uploads/perfil/'.$u['foto_perfil'])): ?>
+              <img src="uploads/perfil/<?php echo htmlspecialchars($u['foto_perfil']); ?>" class="comentario-foto" alt="Eu">
+            <?php else: ?>
+              <div class="comentario-placeholder"><?php echo strtoupper(substr($u['nome'],0,1)); ?></div>
+            <?php endif; ?>
+            <textarea id="novoComentario" placeholder="Escreva um comentário... (Enter para enviar)" maxlength="1000"></textarea>
+            <button class="btn-comentar" onclick="enviarComentario()">Enviar</button>
+          </div>
+        <?php else: ?>
+          <div class="login-para-comentar">
+            <a href="login.php">Faça login</a> para comentar.
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
-    <div class="modal-footer" id="modalFooter">
-      <!-- Botões serão inseridos dinamicamente -->
-    </div>
+    <div class="modal-footer" id="modalFooter"></div>
   </div>
 </div>
 
 <footer>
-  <p>© 2026 HumaniCare - Juntos por um futuro melhor 🌿</p>
+  <p>© 2025 HumaniCare - Juntos por um futuro melhor 🌿</p>
 </footer>
 
-<!-- ===== DADOS DOS EVENTOS (JSON) ===== -->
 <script>
-const eventosData = <?php echo json_encode($eventos); ?>;
-const utilizadorLogado = <?php echo $utilizador_logado ? 'true' : 'false'; ?>;
-const utilizadorId = <?php echo $utilizador_logado ? intval($_SESSION['user']['utilizador_id']) : 'null'; ?>;
-const participacoes = <?php echo json_encode($participacoes); ?>;
+const eventosData      = <?php echo json_encode($eventos); ?>;
+const utilizadorLogado = <?php echo $utilizador_logado?'true':'false'; ?>;
+const utilizadorId     = <?php echo $utilizador_logado?intval($_SESSION['user']['utilizador_id']):'null'; ?>;
+let   participacoes    = <?php echo json_encode(array_map('intval',$participacoes)); ?>;
+<?php if($utilizador_logado): $u=$_SESSION['user']; ?>
+const userFotoUrl = <?php echo !empty($u['foto_perfil'])?'"uploads/perfil/'.htmlspecialchars($u['foto_perfil']).'"':'null'; ?>;
+const userInicial = "<?php echo strtoupper(substr($u['nome'],0,1)); ?>";
+const userNome    = "<?php echo htmlspecialchars($u['nome']); ?>";
+<?php else: ?>
+const userFotoUrl = null, userInicial = '', userNome = '';
+<?php endif; ?>
 </script>
 
 <script>
-// ===== CARROSSEL =====
-let slideIndex = 1;
-showSlides(slideIndex);
-
-function plusSlides(n) { showSlides(slideIndex += n); }
-function currentSlide(n) { showSlides(slideIndex = n); }
-
-function showSlides(n) {
-  const slides = document.getElementsByClassName("mySlides");
-  const dots   = document.getElementsByClassName("dot");
-  if (n > slides.length) slideIndex = 1;
-  if (n < 1)            slideIndex = slides.length;
-  for (let i = 0; i < slides.length; i++) slides[i].style.display = "none";
-  for (let i = 0; i < dots.length; i++)   dots[i].classList.remove("active");
-  if (slides.length > 0) {
-    slides[slideIndex - 1].style.display = "block";
-    dots[slideIndex - 1].classList.add("active");
-  }
+// Carrossel
+let slideIndex=1; showSlides(slideIndex);
+function plusSlides(n){showSlides(slideIndex+=n);}
+function currentSlide(n){showSlides(slideIndex=n);}
+function showSlides(n){
+  const slides=document.getElementsByClassName("mySlides");
+  const dots=document.getElementsByClassName("dot");
+  if(n>slides.length)slideIndex=1;
+  if(n<1)slideIndex=slides.length;
+  for(let i=0;i<slides.length;i++)slides[i].style.display="none";
+  for(let i=0;i<dots.length;i++)dots[i].classList.remove("active");
+  if(slides.length>0){slides[slideIndex-1].style.display="block";dots[slideIndex-1].classList.add("active");}
 }
-setInterval(() => plusSlides(1), 4000);
+setInterval(()=>plusSlides(1),4000);
 
 // ===== MODAL =====
-let eventoAtual = null;
+let eventoAtual=null;
 
-function abrirModal(eventoId) {
-  eventoAtual = eventosData.find(e => e.evento_id == eventoId);
-  if (!eventoAtual) return;
+function abrirModal(eid){
+  eventoAtual=eventosData.find(e=>e.evento_id==eid);
+  if(!eventoAtual)return;
 
-  // Preencher dados
-  document.getElementById('modalTitulo').textContent = eventoAtual.nome;
-  document.getElementById('modalData').textContent = formatarData(eventoAtual.data_evento);
-  document.getElementById('modalLocal').textContent = eventoAtual.local_evento;
-  document.getElementById('modalCriador').textContent = eventoAtual.criador_nome;
-  document.getElementById('modalDescricao').textContent = eventoAtual.descricao;
-  
-  const participantesText = eventoAtual.total_participantes == 1 
-    ? '1 participante' 
-    : eventoAtual.total_participantes + ' participantes';
-  document.getElementById('modalParticipantes').textContent = participantesText;
+  document.getElementById('modalTitulo').textContent=eventoAtual.nome;
+  document.getElementById('modalData').textContent=formatarData(eventoAtual.data_evento);
+  document.getElementById('modalLocal').textContent=eventoAtual.local_evento;
+  document.getElementById('modalDescricao').textContent=eventoAtual.descricao;
+
+  const total=parseInt(eventoAtual.total_participantes);
+  document.getElementById('modalParticipantes').textContent=total===1?'1 participante':total+' participantes';
 
   // Imagem
-  const imgEl = document.getElementById('modalImagem');
-  if (eventoAtual.imagem) {
-    imgEl.src = 'uploads/eventos/' + eventoAtual.imagem;
-    imgEl.style.display = 'block';
-  } else {
-    imgEl.style.display = 'none';
+  const imgEl=document.getElementById('modalImagem');
+  if(eventoAtual.imagem){imgEl.src='uploads/eventos/'+eventoAtual.imagem;imgEl.style.display='block';}
+  else imgEl.style.display='none';
+
+  // Criador com foto
+  const fotoDiv=document.getElementById('modalCriadorFoto');
+  if(eventoAtual.criador_foto){
+    fotoDiv.innerHTML=`<img src="uploads/perfil/${eventoAtual.criador_foto}" class="modal-criador-foto"
+      alt="${htmlEncode(eventoAtual.criador_nome)}"
+      onerror="this.outerHTML='<div class=modal-criador-placeholder>${eventoAtual.criador_nome.charAt(0).toUpperCase()}</div>'">`;
+  }else{
+    fotoDiv.innerHTML=`<div class="modal-criador-placeholder">${eventoAtual.criador_nome.charAt(0).toUpperCase()}</div>`;
   }
+  document.getElementById('modalCriadorNome').textContent=eventoAtual.criador_nome;
 
-  // Botões do footer
-  const footer = document.getElementById('modalFooter');
-  footer.innerHTML = '';
-
-  const éCriador = utilizadorLogado && utilizadorId == eventoAtual.utilizador_id;
-  const participa = utilizadorLogado && participacoes.includes(eventoAtual.evento_id);
-
-  if (utilizadorLogado) {
-    if (éCriador) {
-      // Botão eliminar para o criador
-      footer.innerHTML = `
-        <button class="modal-btn modal-btn-eliminar" onclick="eliminarEvento(${eventoId})">
-          🗑️ Eliminar Evento
-        </button>
-        <button class="modal-btn modal-btn-fechar" onclick="fecharModal()">Fechar</button>
-      `;
-    } else {
-      // Botão participar para outros utilizadores
-      const btnClass = participa ? 'modal-btn-participar inscrito' : 'modal-btn-participar';
-      const btnText = participa ? '✓ Já Inscrito (Cancelar)' : 'Participar neste Evento';
-      footer.innerHTML = `
-        <button class="modal-btn ${btnClass}" onclick="toggleParticiparModal(${eventoId})" id="btnParticiparModal">
-          ${btnText}
-        </button>
-        <button class="modal-btn modal-btn-fechar" onclick="fecharModal()">Fechar</button>
-      `;
+  // Botões footer
+  const footer=document.getElementById('modalFooter');
+  const eCriador=utilizadorLogado&&utilizadorId==eventoAtual.utilizador_id;
+  const participa=utilizadorLogado&&participacoes.includes(parseInt(eventoAtual.evento_id));
+  footer.innerHTML='';
+  if(utilizadorLogado){
+    if(eCriador){
+      footer.innerHTML=`<button class="modal-btn modal-btn-eliminar" onclick="eliminarEvento(${eid})">🗑️ Eliminar</button>
+        <button class="modal-btn modal-btn-fechar" onclick="fecharModal()">Fechar</button>`;
+    }else{
+      const cls=participa?'modal-btn-participar inscrito':'modal-btn-participar';
+      const txt=participa?'✓ Inscrito (Cancelar)':'✅ Participar';
+      footer.innerHTML=`<button class="modal-btn ${cls}" onclick="toggleParticipar(${eid})" id="btnParticipar">${txt}</button>
+        <button class="modal-btn modal-btn-fechar" onclick="fecharModal()">Fechar</button>`;
     }
-  } else {
-    // Não logado
-    footer.innerHTML = `
-      <button class="modal-btn modal-btn-participar" onclick="redirecionarLogin()">
-        Participar neste Evento
-      </button>
-      <button class="modal-btn modal-btn-fechar" onclick="fecharModal()">Fechar</button>
-    `;
+  }else{
+    footer.innerHTML=`<button class="modal-btn modal-btn-participar" onclick="redirecionarLogin()">Participar</button>
+      <button class="modal-btn modal-btn-fechar" onclick="fecharModal()">Fechar</button>`;
   }
 
-  document.getElementById('modalEvento').style.display = 'block';
-  document.body.style.overflow = 'hidden';
+  // Comentários
+  carregarComentarios(eid);
+
+  document.getElementById('modalEvento').style.display='block';
+  document.body.style.overflow='hidden';
 }
 
-function fecharModal() {
-  document.getElementById('modalEvento').style.display = 'none';
-  document.body.style.overflow = 'auto';
-  eventoAtual = null;
+function fecharModal(){
+  document.getElementById('modalEvento').style.display='none';
+  document.body.style.overflow='auto';
+  eventoAtual=null;
 }
 
-function formatarData(data) {
-  const d = new Date(data + 'T00:00:00');
-  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+function formatarData(d){
+  const dt=new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 
-// Fechar ao clicar fora
-window.onclick = function(event) {
-  const modal = document.getElementById('modalEvento');
-  if (event.target == modal) {
-    fecharModal();
-  }
-}
+window.onclick=e=>{if(e.target===document.getElementById('modalEvento'))fecharModal();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharModal();});
 
-// Fechar com ESC
-document.addEventListener('keydown', function(event) {
-  if (event.key === 'Escape') {
-    fecharModal();
-  }
-});
-
-// ===== PARTICIPAR NO MODAL =====
-function toggleParticiparModal(eventoId) {
-  const btn = document.getElementById('btnParticiparModal');
-  btn.disabled = true;
-  btn.textContent = '...';
-
-  const formData = new FormData();
-  formData.append('evento_id', eventoId);
-
-  fetch('participar_evento.php', { method: 'POST', body: formData })
-    .then(r => r.json())
-    .then(data => {
-      if (data.erro) {
-        alert(data.erro);
-        btn.disabled = false;
-        return;
-      }
-
-      if (data.estado === 'inscrito') {
-        participacoes.push(eventoId);
+// ===== PARTICIPAR =====
+function toggleParticipar(eid){
+  const btn=document.getElementById('btnParticipar');
+  btn.disabled=true; btn.textContent='⏳';
+  const fd=new FormData(); fd.append('evento_id',eid);
+  fetch('participar_evento.php',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.erro){alert(data.erro);btn.disabled=false;return;}
+      if(data.estado==='inscrito'){
+        participacoes.push(parseInt(eid));
         btn.classList.add('inscrito');
-        btn.textContent = '✓ Já Inscrito (Cancelar)';
-        
-        // Atualizar contador
+        btn.textContent='✓ Inscrito (Cancelar)';
         eventoAtual.total_participantes++;
-      } else {
-        const index = participacoes.indexOf(eventoId);
-        if (index > -1) participacoes.splice(index, 1);
+      }else{
+        participacoes=participacoes.filter(id=>id!==parseInt(eid));
         btn.classList.remove('inscrito');
-        btn.textContent = 'Participar neste Evento';
-        
-        // Atualizar contador
+        btn.textContent='✅ Participar';
         eventoAtual.total_participantes--;
       }
-
-      // Atualizar display de participantes
-      const participantesText = eventoAtual.total_participantes == 1 
-        ? '1 participante' 
-        : eventoAtual.total_participantes + ' participantes';
-      document.getElementById('modalParticipantes').textContent = participantesText;
-
-      // Atualizar o card também
-      const card = document.querySelector(`[data-evento="${eventoId}"]`);
-      if (card) {
-        card.dataset.participa = data.estado === 'inscrito' ? '1' : '0';
-        const participantesEl = card.querySelector('.evento-info p:nth-child(3)');
-        if (participantesEl) {
-          participantesEl.innerHTML = `<strong>👥 Participantes:</strong> ${eventoAtual.total_participantes}`;
-        }
+      const t=parseInt(eventoAtual.total_participantes);
+      document.getElementById('modalParticipantes').textContent=t===1?'1 participante':t+' participantes';
+      const card=document.querySelector(`[data-evento="${eid}"]`);
+      if(card){
+        card.dataset.participa=data.estado==='inscrito'?'1':'0';
+        const el=card.querySelector('.evento-info p:nth-child(3)');
+        if(el)el.innerHTML=`<strong>👥 Participantes:</strong> ${eventoAtual.total_participantes}`;
       }
-
-      btn.disabled = false;
+      btn.disabled=false;
     })
-    .catch(() => {
-      alert('Erro de conexão. Tente novamente.');
-      btn.disabled = false;
-      btn.textContent = 'Participar neste Evento';
-    });
+    .catch(()=>{alert('Erro de conexão.');btn.disabled=false;btn.textContent='✅ Participar';});
 }
 
-// ===== ELIMINAR EVENTO =====
-function eliminarEvento(eventoId) {
-  if (!confirm('Tem a certeza que deseja eliminar este evento?\n\nEsta ação não pode ser desfeita.')) {
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('evento_id', eventoId);
-
-  fetch('eliminar_evento.php', { method: 'POST', body: formData })
-    .then(r => r.json())
-    .then(data => {
-      if (data.erro) {
-        alert('Erro: ' + data.erro);
-        return;
-      }
-
-      if (data.sucesso) {
+// ===== ELIMINAR =====
+function eliminarEvento(eid){
+  if(!confirm('Eliminar este evento? Esta ação não pode ser desfeita.'))return;
+  const fd=new FormData(); fd.append('evento_id',eid);
+  fetch('eliminar_evento.php',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.erro){alert('Erro: '+data.erro);return;}
+      if(data.sucesso){
         fecharModal();
-        // Remover o card da página
-        const card = document.querySelector(`[data-evento="${eventoId}"]`);
-        if (card) {
-          card.style.opacity = '0';
-          card.style.transform = 'scale(0.8)';
-          setTimeout(() => {
-            card.remove();
-            // Verificar se ainda há eventos
-            if (document.querySelectorAll('.evento-card').length === 0) {
-              document.querySelector('.eventos-grid').innerHTML = 
-                '<p class="mensagem-centro">Ainda não existem eventos criados. Seja o primeiro a criar um!</p>';
-            }
-          }, 300);
-        }
-        
-        // Mostrar mensagem de sucesso
-        window.location.href = 'index.php?eliminado=1#eventosProjetos';
+        const card=document.querySelector(`[data-evento="${eid}"]`);
+        if(card){card.style.transition='opacity .3s,transform .3s';card.style.opacity='0';card.style.transform='scale(0.8)';
+          setTimeout(()=>{card.remove();if(!document.querySelectorAll('.evento-card').length)
+            document.querySelector('.eventos-grid').innerHTML='<p class="mensagem-centro">Ainda não existem eventos.</p>';},300);}
+        window.location.href='index.php?eliminado=1#eventosProjetos';
       }
     })
-    .catch(() => {
-      alert('Erro de conexão. Tente novamente.');
-    });
+    .catch(()=>alert('Erro de conexão.'));
 }
 
-// ===== VALIDAÇÃO FORMULÁRIO =====
-<?php if($utilizador_logado): ?>
-const formEvento = document.getElementById('formEvento');
-const btnSubmit  = document.getElementById('btnSubmit');
-
-if (formEvento) {
-  formEvento.addEventListener('submit', function(e) {
-    const nome      = document.getElementById('nome').value.trim();
-    const descricao = document.getElementById('descricao').value.trim();
-    const data      = document.getElementById('data').value;
-    const local     = document.getElementById('local').value.trim();
-
-    if (!nome || !descricao || !data || !local) {
-      e.preventDefault();
-      alert('Por favor, preencha todos os campos obrigatórios.');
-      return false;
-    }
-
-    // Validação de múltiplas imagens
-    const imagens = document.getElementById('imagens');
-    if (imagens.files.length > 0) {
-      // Limitar a 5 imagens
-      if (imagens.files.length > 5) {
-        e.preventDefault();
-        alert('Máximo de 5 imagens permitido.');
-        return false;
-      }
-      
-      // Validar cada imagem
-      for (let i = 0; i < imagens.files.length; i++) {
-        const file = imagens.files[i];
-        
-        // Validar tamanho (máx 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          e.preventDefault();
-          alert(`Imagem ${i + 1} é muito grande. Máximo 5MB por imagem.`);
-          return false;
-        }
-        
-        // Validar tipo
-        const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-        if (!tiposPermitidos.includes(file.type)) {
-          e.preventDefault();
-          alert(`Imagem ${i + 1} tem tipo inválido. Use JPG, PNG, GIF ou WEBP.`);
-          return false;
-        }
-      }
-    }
-
-    btnSubmit.disabled = true;
-    btnSubmit.textContent = 'A criar evento...';
-  });
-}
-<?php endif; ?>
-
-// ===== FILTRO DE EVENTOS =====
-<?php if($utilizador_logado): ?>
-document.querySelectorAll('.filtro-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
-    this.classList.add('ativo');
-
-    const filtro = this.dataset.filtro;
-    document.querySelectorAll('.evento-card').forEach(card => {
-      const criador   = parseInt(card.dataset.criador);
-      const participa = card.dataset.participa === '1';
-      let mostrar = true;
-
-      if      (filtro === 'criados')   mostrar = (criador === utilizadorId);
-      else if (filtro === 'participa') mostrar = participa;
-
-      card.style.display = mostrar ? '' : 'none';
-    });
-  });
-});
-<?php endif; ?>
-
-// ===== REDIRECIONAR PARA LOGIN =====
-function redirecionarLogin() {
-  if (confirm('Precisa fazer login para participar. Deseja ir para a página de login?')) {
-    window.location.href = 'login.php';
-  }
+// ===== COMENTÁRIOS =====
+function carregarComentarios(eid){
+  const lista=document.getElementById('comentariosLista');
+  lista.innerHTML='<p class="sem-comentarios">A carregar...</p>';
+  fetch(`comentarios.php?acao=buscar&evento_id=${eid}`)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.erro){lista.innerHTML=`<p class="sem-comentarios">${data.erro}</p>`;return;}
+      renderComentarios(data.comentarios);
+    })
+    .catch(()=>lista.innerHTML='<p class="sem-comentarios">Erro ao carregar.</p>');
 }
 
-// ===== REMOVER MENSAGENS APÓS 5s =====
-setTimeout(() => {
-  document.querySelectorAll('.mensagem').forEach(msg => {
-    msg.style.transition = 'opacity 0.5s';
-    msg.style.opacity = '0';
-    setTimeout(() => msg.remove(), 500);
-  });
-}, 5000);
-
-// ===== SCROLL SUAVE =====
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function(e) {
-    const href = this.getAttribute('href');
-    if (href !== '#') {
-      e.preventDefault();
-      const target = document.querySelector(href);
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
-});
-
-// ===== PREVIEW DE MÚLTIPLAS IMAGENS =====
-let imagensArray = [];
-
-function previewImagens(input) {
-  const preview = document.getElementById('preview-imagens');
-  preview.innerHTML = '';
-  
-  if (!input.files || input.files.length === 0) {
+function renderComentarios(lista_c){
+  const lista=document.getElementById('comentariosLista');
+  if(!lista_c||lista_c.length===0){
+    lista.innerHTML='<p class="sem-comentarios">Ainda não há comentários. Seja o primeiro! 💬</p>';
     return;
   }
-  
-  // Limitar a 5 imagens
-  const maxImagens = Math.min(input.files.length, 5);
-  if (input.files.length > 5) {
-    alert('⚠️ Máximo de 5 imagens permitido. Apenas as primeiras 5 serão carregadas.');
-  }
-  
-  imagensArray = Array.from(input.files).slice(0, 5);
-  
-  // Criar DataTransfer para atualizar o input
-  const dt = new DataTransfer();
-  imagensArray.forEach(file => dt.items.add(file));
-  input.files = dt.files;
-  
-  // Criar preview para cada imagem
-  imagensArray.forEach((file, index) => {
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-      const container = document.createElement('div');
-      container.classList.add('preview-container');
-      container.dataset.index = index;
-      
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      img.classList.add('preview-img');
-      img.alt = `Imagem ${index + 1}`;
-      
-      const btnRemove = document.createElement('button');
-      btnRemove.classList.add('remove-preview');
-      btnRemove.innerHTML = '×';
-      btnRemove.type = 'button';
-      btnRemove.onclick = function() {
-        removerImagem(index, input);
-      };
-      
-      const numero = document.createElement('span');
-      numero.classList.add('preview-numero');
-      numero.textContent = index + 1;
-      
-      container.appendChild(img);
-      container.appendChild(btnRemove);
-      container.appendChild(numero);
-      preview.appendChild(container);
-    };
-    
-    reader.readAsDataURL(file);
+  lista.innerHTML=lista_c.map(c=>`
+    <div class="comentario-item">
+      ${c.foto_url
+        ?`<img src="${c.foto_url}" class="comentario-foto" alt="${htmlEncode(c.nome)}" onerror="this.outerHTML='<div class=comentario-placeholder>${c.inicial}</div>'">`
+        :`<div class="comentario-placeholder">${c.inicial}</div>`}
+      <div class="comentario-balao">
+        <a href="ver_perfil.php?id=${c.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(c.nome)}</a>
+        <div class="comentario-texto">${htmlEncode(c.texto)}</div>
+        <div class="comentario-data">${c.data_formatada}</div>
+      </div>
+    </div>`).join('');
+}
+
+function enviarComentario(){
+  if(!eventoAtual)return;
+  const ta=document.getElementById('novoComentario');
+  const texto=ta.value.trim();
+  if(!texto){ta.focus();return;}
+  const btn=document.querySelector('.btn-comentar');
+  btn.disabled=true; btn.textContent='⏳';
+  const fd=new FormData();
+  fd.append('acao','guardar');
+  fd.append('evento_id',eventoAtual.evento_id);
+  fd.append('texto',texto);
+  fetch('comentarios.php',{method:'POST',body:fd})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.erro){alert(data.erro);btn.disabled=false;btn.textContent='Enviar';return;}
+      const lista=document.getElementById('comentariosLista');
+      const semMsg=lista.querySelector('.sem-comentarios');
+      if(semMsg)semMsg.remove();
+      const novoHtml=`
+        <div class="comentario-item">
+          ${data.foto_url
+            ?`<img src="${data.foto_url}" class="comentario-foto" onerror="this.outerHTML='<div class=comentario-placeholder>${data.inicial}</div>'">`
+            :`<div class="comentario-placeholder">${data.inicial}</div>`}
+          <div class="comentario-balao">
+            <a href="ver_perfil.php?id=${data.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(data.nome)}</a>
+            <div class="comentario-texto">${htmlEncode(data.texto)}</div>
+            <div class="comentario-data">${data.data_formatada}</div>
+          </div>
+        </div>`;
+      lista.insertAdjacentHTML('beforeend',novoHtml);
+      lista.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+      ta.value=''; btn.disabled=false; btn.textContent='Enviar';
+    })
+    .catch(()=>{alert('Erro.');btn.disabled=false;btn.textContent='Enviar';});
+}
+
+// Enter para enviar
+document.addEventListener('DOMContentLoaded',()=>{
+  const ta=document.getElementById('novoComentario');
+  if(ta)ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviarComentario();}});
+});
+
+function htmlEncode(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function redirecionarLogin(){
+  if(confirm('Precisa de login para participar. Ir para login?'))window.location.href='login.php';
+}
+
+// Filtro
+<?php if($utilizador_logado): ?>
+document.querySelectorAll('.filtro-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('ativo'));
+    this.classList.add('ativo');
+    const filtro=this.dataset.filtro;
+    document.querySelectorAll('.evento-card').forEach(card=>{
+      const cr=parseInt(card.dataset.criador);
+      const pa=card.dataset.participa==='1';
+      let show=true;
+      if(filtro==='criados')show=cr===utilizadorId;
+      else if(filtro==='participa')show=pa;
+      card.style.display=show?'':'none';
+    });
+  });
+});
+<?php endif; ?>
+
+// Validação form
+<?php if($utilizador_logado): ?>
+const formEvento=document.getElementById('formEvento');
+const btnSubmit=document.getElementById('btnSubmit');
+if(formEvento){
+  formEvento.addEventListener('submit',function(e){
+    if(!document.getElementById('nome').value.trim()||!document.getElementById('descricao').value.trim()||
+       !document.getElementById('data').value||!document.getElementById('local').value.trim()){
+      e.preventDefault();alert('Preencha todos os campos obrigatórios.');return;
+    }
+    const img=document.getElementById('imagem');
+    if(img.files.length&&img.files[0].size>5*1024*1024){
+      e.preventDefault();alert('Imagem demasiado grande (máx 5MB).');return;
+    }
+    btnSubmit.disabled=true;btnSubmit.textContent='A criar...';
   });
 }
+<?php endif; ?>
 
-function removerImagem(index, input) {
-  imagensArray.splice(index, 1);
-  
-  // Atualizar o input
-  const dt = new DataTransfer();
-  imagensArray.forEach(file => dt.items.add(file));
-  input.files = dt.files;
-  
-  // Atualizar preview
-  previewImagens(input);
-  
-  // Mostrar mensagem
-  if (imagensArray.length === 0) {
-    document.getElementById('preview-imagens').innerHTML = '';
-  }
+function previewImagem(input){
+  const preview=document.getElementById('preview-imagens');
+  preview.innerHTML='';
+  if(!input.files||!input.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    preview.innerHTML=`<div class="preview-container"><img src="${e.target.result}" class="preview-img" alt="Preview"></div>`;
+  };
+  reader.readAsDataURL(input.files[0]);
 }
-</script>
 
+// Auto-hide mensagens
+setTimeout(()=>{
+  document.querySelectorAll('.mensagem').forEach(m=>{
+    m.style.transition='opacity .5s';m.style.opacity='0';
+    setTimeout(()=>m.remove(),500);
+  });
+},5000);
+
+// Scroll suave
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',function(e){
+    const href=this.getAttribute('href');
+    if(href!=='#'){e.preventDefault();const t=document.querySelector(href);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+});
+</script>
 </body>
 </html>

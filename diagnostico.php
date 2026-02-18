@@ -29,22 +29,15 @@ try {
     echo "<div class='erro'>❌ Erro: " . $e->getMessage() . "</div>";
 }
 
-// 2. Verificar se a tabela evento_imagem existe
-echo "<h3>2️⃣ Tabela evento_imagem</h3>";
+// 2. Verificar coluna imagem na tabela evento
+echo "<h3>2️⃣ Coluna imagem na tabela evento</h3>";
 try {
-    $stmt = $pdo->query("SHOW TABLES LIKE 'evento_imagem'");
-    $table = $stmt->fetch();
-    
-    if ($table) {
-        echo "<div class='ok'>✅ Tabela 'evento_imagem' existe!</div>";
-        
-        // Contar imagens
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM evento_imagem");
-        $total = $stmt->fetch()['total'];
-        echo "<div class='info'>📊 Total de imagens na tabela: $total</div>";
+    $stmt = $pdo->query("SHOW COLUMNS FROM evento LIKE 'imagem'");
+    $col = $stmt->fetch();
+    if ($col) {
+        echo "<div class='ok'>✅ Coluna 'imagem' existe na tabela evento!</div>";
     } else {
-        echo "<div class='erro'>❌ Tabela 'evento_imagem' NÃO existe! Você executou o SQL?</div>";
-        echo "<div class='info'>Execute o SQL completo no phpMyAdmin!</div>";
+        echo "<div class='erro'>❌ Coluna 'imagem' NÃO existe na tabela evento!</div>";
     }
 } catch (Exception $e) {
     echo "<div class='erro'>❌ Erro: " . $e->getMessage() . "</div>";
@@ -82,16 +75,20 @@ foreach ($arquivos as $arquivo => $desc) {
         }
         
         if ($arquivo === 'guardar_evento.php') {
-            if (strpos($conteudo, 'imagens[]') !== false || strpos($conteudo, 'evento_imagem') !== false) {
-                echo "<div class='ok'>   ✓ Suporta múltiplas imagens</div>";
+            if (strpos($conteudo, 'imagem' !== false) {
+                echo "<div class='ok'>   ✓ Suporta upload de imagem</div>";
             } else {
-                echo "<div class='aviso'>   ⚠ Pode não suportar múltiplas imagens</div>";
+                echo "<div class='aviso'>   ⚠ Pode não suportar upload de imagem</div>";
             }
         }
     } else {
         echo "<div class='erro'>❌ $arquivo NÃO existe!</div>";
     }
 }
+
+// Criar pastas automaticamente se não existirem
+if (!is_dir('uploads/perfil')) { mkdir('uploads/perfil', 0755, true); }
+if (!is_dir('uploads/eventos')) { mkdir('uploads/eventos', 0755, true); }
 
 // 4. Verificar pastas
 echo "<h3>4️⃣ Pastas de Upload</h3>";
@@ -128,10 +125,10 @@ if (file_exists('index.php')) {
     
     // Verificar input múltiplo
     if (strpos($conteudo, 'name="imagens[]"') !== false) {
-        echo "<div class='ok'>   ✓ Formulário suporta múltiplas imagens (name=\"imagens[]\")</div>";
+        echo "<div class='ok'>   ✓ Formulário suporta upload de imagem (name=\"imagem\")</div>";
     } elseif (strpos($conteudo, 'name="imagem"') !== false) {
         echo "<div class='aviso'>   ⚠ Formulário ainda usa input único (name=\"imagem\")</div>";
-        echo "<div class='info'>   Precisa alterar para name=\"imagens[]\" e adicionar 'multiple'</div>";
+        echo "<div class='info'>   Precisa alterar para name=\"imagem\" e adicionar 'multiple'</div>";
     }
     
     // Verificar função de preview
