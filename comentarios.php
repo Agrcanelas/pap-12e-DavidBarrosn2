@@ -8,9 +8,39 @@ $acao = $_POST['acao'] ?? $_GET['acao'] ?? '';
 // ===== BUSCAR COMENTÁRIOS =====
 if ($acao === 'buscar') {
     $evento_id = intval($_GET['evento_id'] ?? 0);
-    if ($evento_id === 0) { echo json_encode(['erro' => 'Evento inválido.']); exit; }
+    if ($evento_id === 0) {
+        echo json_encode(['erro' => 'Evento inválido.']);
+        exit;
+    }
 
     try {
+        // Verificar primeiro se a tabela existe
+        $check = $pdo->query("SHOW TABLES LIKE 'comentario'");
+        if (!$check->fetch()) {
+            // Criar a tabela automaticamente se não existir
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS comentario (
+                    comentario_id   INT NOT NULL AUTO_INCREMENT,
+                    evento_id       INT NOT NULL,
+                    utilizador_id   INT NOT NULL,
+                    texto           TEXT NOT NULL,
+                    data_comentario TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (comentario_id),
+                    INDEX idx_evento     (evento_id),
+                    INDEX idx_utilizador (utilizador_id),
+                    INDEX idx_data       (data_comentario),
+                    CONSTRAINT fk_coment_evento
+                        FOREIGN KEY (evento_id)
+                        REFERENCES evento(evento_id)
+                        ON DELETE CASCADE ON UPDATE CASCADE,
+                    CONSTRAINT fk_coment_utilizador
+                        FOREIGN KEY (utilizador_id)
+                        REFERENCES utilizador(utilizador_id)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+            ");
+        }
+
         $stmt = $pdo->prepare("
             SELECT c.comentario_id, c.texto, c.data_comentario,
                    u.utilizador_id, u.nome, u.foto_perfil
@@ -29,8 +59,9 @@ if ($acao === 'buscar') {
         }
 
         echo json_encode(['comentarios' => $comentarios]);
+
     } catch (PDOException $e) {
-        echo json_encode(['erro' => 'Erro ao buscar comentários.']);
+        echo json_encode(['erro' => 'Erro ao buscar comentários: ' . $e->getMessage()]);
     }
     exit;
 }
@@ -38,7 +69,8 @@ if ($acao === 'buscar') {
 // ===== GUARDAR COMENTÁRIO =====
 if ($acao === 'guardar') {
     if (!isset($_SESSION['user'])) {
-        echo json_encode(['erro' => 'Precisa fazer login para comentar.']); exit;
+        echo json_encode(['erro' => 'Precisa fazer login para comentar.']);
+        exit;
     }
 
     $evento_id     = intval($_POST['evento_id'] ?? 0);
@@ -46,15 +78,47 @@ if ($acao === 'guardar') {
     $utilizador_id = $_SESSION['user']['utilizador_id'];
 
     if ($evento_id === 0 || empty($texto)) {
-        echo json_encode(['erro' => 'Texto vazio.']); exit;
+        echo json_encode(['erro' => 'Texto vazio.']);
+        exit;
     }
     if (mb_strlen($texto) > 1000) {
-        echo json_encode(['erro' => 'Máximo 1000 caracteres.']); exit;
+        echo json_encode(['erro' => 'Máximo 1000 caracteres.']);
+        exit;
     }
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO comentario (evento_id, utilizador_id, texto) VALUES (:eid, :uid, :texto)");
-        $stmt->execute([':eid' => $evento_id, ':uid' => $utilizador_id, ':texto' => $texto]);
+        // Garantir que a tabela existe antes de inserir
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS comentario (
+                comentario_id   INT NOT NULL AUTO_INCREMENT,
+                evento_id       INT NOT NULL,
+                utilizador_id   INT NOT NULL,
+                texto           TEXT NOT NULL,
+                data_comentario TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (comentario_id),
+                INDEX idx_evento     (evento_id),
+                INDEX idx_utilizador (utilizador_id),
+                INDEX idx_data       (data_comentario),
+                CONSTRAINT fk_coment_evento
+                    FOREIGN KEY (evento_id)
+                    REFERENCES evento(evento_id)
+                    ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_coment_utilizador
+                    FOREIGN KEY (utilizador_id)
+                    REFERENCES utilizador(utilizador_id)
+                    ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        ");
+
+        $stmt = $pdo->prepare("
+            INSERT INTO comentario (evento_id, utilizador_id, texto)
+            VALUES (:eid, :uid, :texto)
+        ");
+        $stmt->execute([
+            ':eid'   => $evento_id,
+            ':uid'   => $utilizador_id,
+            ':texto' => $texto
+        ]);
 
         $u        = $_SESSION['user'];
         $foto_url = !empty($u['foto_perfil']) ? 'uploads/perfil/' . $u['foto_perfil'] : null;
@@ -69,12 +133,9 @@ if ($acao === 'guardar') {
             'data_formatada' => date('d/m/Y H:i'),
             'utilizador_id'  => $utilizador_id
         ]);
+
     } catch (PDOException $e) {
-        if (strpos($e->getMessage(), "doesn't exist") !== false) {
-            echo json_encode(['erro' => 'Execute o ficheiro adicionar_comentarios.sql no phpMyAdmin primeiro!']);
-        } else {
-            echo json_encode(['erro' => 'Erro ao guardar comentário.']);
-        }
+        echo json_encode(['erro' => 'Erro ao guardar comentário: ' . $e->getMessage()]);
     }
     exit;
 }
