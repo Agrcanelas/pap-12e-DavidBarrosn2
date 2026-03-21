@@ -163,6 +163,21 @@ if ($utilizador_logado) {
     }
     .login-para-comentar a{color:#58b79d;font-weight:bold;}
 
+    .btn-eliminar-comentario{
+      background:none;border:none;cursor:pointer;
+      color:#ccc;font-size:14px;padding:2px 6px;
+      border-radius:4px;transition:all .2s;
+      line-height:1;margin-left:4px;
+      display:inline-flex;align-items:center;gap:3px;
+    }
+    .btn-eliminar-comentario:hover{
+      color:#e74c3c;background:rgba(231,76,60,0.08);
+    }
+    .comentario-header{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:3px;
+    }
+
     /* Modal footer */
     .modal-footer{
       padding:14px 28px;background:#f8f8f5;
@@ -634,12 +649,17 @@ function renderComentarios(lista_c){
     return;
   }
   lista.innerHTML=lista_c.map(c=>`
-    <div class="comentario-item">
+    <div class="comentario-item" data-comentario-id="${c.comentario_id}">
       ${c.foto_url
         ?`<img src="${c.foto_url}" class="comentario-foto" alt="${htmlEncode(c.nome)}" onerror="this.outerHTML='<div class=comentario-placeholder>${c.inicial}</div>'">`
         :`<div class="comentario-placeholder">${c.inicial}</div>`}
       <div class="comentario-balao">
-        <a href="ver_perfil.php?id=${c.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(c.nome)}</a>
+        <div class="comentario-header">
+          <a href="ver_perfil.php?id=${c.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(c.nome)}</a>
+          ${c.pode_eliminar
+            ?`<button class="btn-eliminar-comentario" onclick="eliminarComentario(${c.comentario_id}, this)" title="Eliminar comentário">🗑️</button>`
+            :''}
+        </div>
         <div class="comentario-texto">${htmlEncode(c.texto)}</div>
         <div class="comentario-data">${c.data_formatada}</div>
       </div>
@@ -665,12 +685,15 @@ function enviarComentario(){
       const semMsg=lista.querySelector('.sem-comentarios');
       if(semMsg)semMsg.remove();
       const novoHtml=`
-        <div class="comentario-item">
+        <div class="comentario-item" data-comentario-id="${data.comentario_id}">
           ${data.foto_url
             ?`<img src="${data.foto_url}" class="comentario-foto" onerror="this.outerHTML='<div class=comentario-placeholder>${data.inicial}</div>'">`
             :`<div class="comentario-placeholder">${data.inicial}</div>`}
           <div class="comentario-balao">
-            <a href="ver_perfil.php?id=${data.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(data.nome)}</a>
+            <div class="comentario-header">
+              <a href="ver_perfil.php?id=${data.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(data.nome)}</a>
+              <button class="btn-eliminar-comentario" onclick="eliminarComentario(${data.comentario_id}, this)" title="Eliminar comentário">🗑️</button>
+            </div>
             <div class="comentario-texto">${htmlEncode(data.texto)}</div>
             <div class="comentario-data">${data.data_formatada}</div>
           </div>
@@ -687,6 +710,35 @@ document.addEventListener('DOMContentLoaded',()=>{
   const ta=document.getElementById('novoComentario');
   if(ta)ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviarComentario();}});
 });
+
+// ===== ELIMINAR COMENTÁRIO =====
+function eliminarComentario(comentarioId, btn) {
+  if (!confirm('Eliminar este comentário?')) return;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  const fd = new FormData();
+  fd.append('acao', 'eliminar');
+  fd.append('comentario_id', comentarioId);
+  fetch('comentarios.php', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.erro) { alert(data.erro); btn.disabled = false; btn.textContent = '🗑️'; return; }
+      const item = document.querySelector(`[data-comentario-id="${comentarioId}"]`);
+      if (item) {
+        item.style.transition = 'opacity .3s, transform .3s';
+        item.style.opacity = '0';
+        item.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          item.remove();
+          const lista = document.getElementById('comentariosLista');
+          if (lista && !lista.querySelector('.comentario-item')) {
+            lista.innerHTML = '<p class="sem-comentarios">Ainda não há comentários. Seja o primeiro! 💬</p>';
+          }
+        }, 300);
+      }
+    })
+    .catch(() => { alert('Erro de conexão.'); btn.disabled = false; btn.textContent = '🗑️'; });
+}
 
 function htmlEncode(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
