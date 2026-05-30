@@ -69,11 +69,6 @@ if ($utilizador_logado) {
 <div class="eventos-page">
   <a href="index.php" class="btn-voltar-home">← Voltar à página principal</a>
 
-  <div class="eventos-page-header">
-    <h2>📅 Todos os Eventos</h2>
-    <p>Explore e participe em iniciativas solidárias perto de si</p>
-  </div>
-
   <!-- Pesquisa -->
   <div class="pesquisa-bar">
     <input type="text" class="pesquisa-input" id="pesquisaInput" placeholder="🔍 Pesquisar eventos por nome ou local..." oninput="filtrarEventos()">
