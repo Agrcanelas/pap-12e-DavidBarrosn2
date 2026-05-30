@@ -37,197 +37,6 @@ if ($utilizador_logado) {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>HumaniCare</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    /* ===== MODAL ===== */
-    .modal {
-      display:none; position:fixed; z-index:1000;
-      left:0; top:0; width:100%; height:100%;
-      overflow:hidden; background:rgba(0,0,0,0.6);
-      backdrop-filter:blur(4px); animation:fadeIn .3s ease;
-    }
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    .modal-content {
-      background:white; margin:1.5% auto;
-      border-radius:16px; width:90%; max-width:720px;
-      box-shadow:0 10px 40px rgba(0,0,0,0.3);
-      animation:slideDown .35s ease;
-      overflow:hidden; display:flex; flex-direction:column;
-      max-height:96vh;
-    }
-    @keyframes slideDown{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
-
-    .modal-header {
-      background:linear-gradient(135deg,#58b79d,#4a9c82);
-      color:white; padding:20px 28px; position:relative; flex-shrink:0;
-    }
-    .modal-header h2{margin:0;font-size:22px;padding-right:40px;}
-    .close {
-      color:white; position:absolute; right:16px; top:16px;
-      font-size:28px; font-weight:bold; cursor:pointer;
-      width:32px; height:32px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-      background:rgba(255,255,255,0.2); transition:all .3s;
-    }
-    .close:hover{background:rgba(255,255,255,0.35);transform:rotate(90deg);}
-
-    .modal-body{padding:22px 28px;overflow-y:auto;flex:1;}
-
-    .modal-image{width:100%;height:240px;object-fit:cover;border-radius:10px;margin-bottom:18px;}
-
-    /* Criador */
-    .modal-criador {
-      display:flex; align-items:center; gap:12px;
-      padding:12px 14px; background:#f0faf7;
-      border-radius:10px; border:2px solid #c8e6de; margin-bottom:14px;
-    }
-    .modal-criador-foto {
-      width:46px; height:46px; border-radius:50%;
-      object-fit:cover; border:2px solid #58b79d; flex-shrink:0;
-    }
-    .modal-criador-placeholder {
-      width:46px; height:46px; border-radius:50%;
-      background:linear-gradient(135deg,#58b79d,#7a8c3c);
-      display:flex; align-items:center; justify-content:center;
-      color:white; font-weight:bold; font-size:19px; flex-shrink:0;
-    }
-    .modal-criador-info small{color:#666;font-size:11px;display:block;}
-    .modal-criador-info strong{color:#3a7a62;font-size:15px;}
-
-    .modal-info-item {
-      display:flex; align-items:center; margin-bottom:10px;
-      padding:9px 12px; background:#f8f8f5;
-      border-radius:8px; border-left:4px solid #58b79d; gap:10px;
-    }
-    .modal-info-item .icon{font-size:17px;}
-    .modal-info-item .label{font-weight:bold;color:#4a4a4a;min-width:60px;}
-    .modal-info-item .value{color:#555;flex:1;}
-
-    .participantes-count {
-      display:inline-flex; align-items:center; gap:8px;
-      background:white; padding:6px 14px; border-radius:20px;
-      font-size:13px; font-weight:bold; color:#58b79d;
-      box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:14px;
-    }
-
-    .modal-description {
-      background:#f8f8f5; padding:16px; border-radius:10px;
-      border:2px solid #e0e0e0; margin-bottom:18px;
-    }
-    .modal-description h3{margin:0 0 8px;color:#7a8c3c;font-size:15px;}
-    .modal-description p{margin:0;line-height:1.7;color:#555;white-space:pre-line;}
-
-    /* ===== COMENTÁRIOS ===== */
-    .comentarios-secao{border-top:2px solid #e8e8e8;padding-top:18px;}
-    .comentarios-secao h3{color:#7a8c3c;margin:0 0 14px;font-size:16px;}
-    .comentarios-lista{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-
-    .comentario-item{display:flex;gap:10px;align-items:flex-start;}
-    .comentario-foto{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #58b79d;flex-shrink:0;}
-    .comentario-placeholder{
-      width:36px;height:36px;border-radius:50%;
-      background:linear-gradient(135deg,#58b79d,#7a8c3c);
-      display:flex;align-items:center;justify-content:center;
-      color:white;font-weight:bold;font-size:14px;flex-shrink:0;
-    }
-    .comentario-balao{
-      background:#f4f4f0;border-radius:0 10px 10px 10px;
-      padding:9px 13px;flex:1;border:1px solid #e8e8e8;
-    }
-    .comentario-autor{
-      font-weight:bold;color:#3a7a62;font-size:13px;
-      cursor:pointer;text-decoration:none;display:inline-block;margin-bottom:3px;
-    }
-    .comentario-autor:hover{text-decoration:underline;}
-    .comentario-texto{color:#444;font-size:14px;line-height:1.5;word-break:break-word;}
-    .comentario-data{color:#bbb;font-size:11px;margin-top:4px;}
-    .sem-comentarios{color:#bbb;font-size:14px;text-align:center;padding:14px;}
-
-    .comentario-form{display:flex;gap:9px;align-items:flex-start;}
-    .comentario-form textarea{
-      flex:1;padding:9px 13px;border:2px solid #c8c0ae;
-      border-radius:8px;font-family:inherit;font-size:14px;
-      resize:vertical;min-height:56px;transition:border-color .3s;
-    }
-    .comentario-form textarea:focus{outline:none;border-color:#58b79d;}
-    .btn-comentar{
-      background:linear-gradient(135deg,#58b79d,#4a9c82);
-      color:white;border:none;padding:9px 16px;border-radius:8px;
-      font-weight:bold;cursor:pointer;font-size:14px;
-      transition:all .3s;white-space:nowrap;align-self:flex-end;
-    }
-    .btn-comentar:hover{transform:translateY(-2px);}
-    .btn-comentar:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-    .login-para-comentar{
-      text-align:center;color:#888;font-size:14px;
-      padding:10px;background:#f8f8f5;border-radius:8px;
-    }
-    .login-para-comentar a{color:#58b79d;font-weight:bold;}
-
-    .btn-eliminar-comentario{
-      background:none;border:none;cursor:pointer;
-      color:#ccc;font-size:14px;padding:2px 6px;
-      border-radius:4px;transition:all .2s;
-      line-height:1;margin-left:4px;
-      display:inline-flex;align-items:center;gap:3px;
-    }
-    .btn-eliminar-comentario:hover{
-      color:#e74c3c;background:rgba(231,76,60,0.08);
-    }
-    .comentario-header{
-      display:flex;align-items:center;justify-content:space-between;
-      margin-bottom:3px;
-    }
-
-    /* Modal footer */
-    .modal-footer{
-      padding:14px 28px;background:#f8f8f5;
-      border-top:2px solid #e0e0e0;
-      display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;
-    }
-    .modal-btn{
-      padding:10px 22px;border-radius:8px;border:none;
-      font-size:15px;font-weight:bold;cursor:pointer;
-      transition:all .3s;font-family:inherit;
-    }
-    .modal-btn-participar{background:linear-gradient(135deg,#58b79d,#4a9c82);color:white;}
-    .modal-btn-participar:hover{transform:translateY(-2px);}
-    .modal-btn-participar.inscrito{background:linear-gradient(135deg,#c0392b,#a0301f);}
-    .modal-btn-eliminar{background:linear-gradient(135deg,#e74c3c,#c0392b);color:white;}
-    .modal-btn-eliminar:hover{transform:translateY(-2px);}
-    .modal-btn-fechar{background:#e0e0e0;color:#4a4a4a;}
-    .modal-btn-fechar:hover{background:#d0d0d0;}
-    .modal-btn:disabled{opacity:.6;cursor:not-allowed;transform:none!important;}
-
-    /* Header utilizador com foto */
-    a.usuario-logado{
-      display:flex;align-items:center;gap:8px;
-      font-weight:bold;color:#58b79d;font-size:14px;
-      padding:6px 14px;background:white;border-radius:20px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);text-decoration:none;
-      transition:all .3s;
-    }
-    a.usuario-logado:hover{box-shadow:0 4px 12px rgba(88,183,157,0.3);transform:translateY(-1px);}
-    .user-foto-mini{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #58b79d;}
-    .user-placeholder-mini{
-      width:30px;height:30px;border-radius:50%;
-      background:linear-gradient(135deg,#58b79d,#7a8c3c);
-      display:flex;align-items:center;justify-content:center;
-      color:white;font-weight:bold;font-size:13px;
-    }
-
-    .evento-card{cursor:pointer;}
-    .evento-card:active{transform:scale(0.98);}
-
-    /* Preview */
-    #preview-imagens{
-      display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
-      gap:10px;margin-top:14px;padding:10px;
-      background:#f8f8f5;border-radius:8px;border:2px dashed #c8c0ae;
-    }
-    #preview-imagens:empty{display:none;}
-    .preview-container{position:relative;border-radius:8px;overflow:hidden;}
-    .preview-img{width:100%;height:96px;object-fit:cover;border:2px solid #58b79d;border-radius:8px;display:block;}
-  </style>
 </head>
 <body>
 
@@ -253,7 +62,7 @@ if ($utilizador_logado) {
       <a href="#doacoes">Doações</a>
       <a href="#envolva">Envolva-se</a>
       <a href="#criar-evento">Criar Evento</a>
-      <a href="#eventosProjetos">Eventos</a>
+      <a href="eventos.php">Eventos</a>
       <?php if($utilizador_logado): ?>
         <a href="logout.php" class="btn-sair">Sair</a>
       <?php else: ?>
@@ -358,26 +167,21 @@ if ($utilizador_logado) {
 </section>
 
 <section id="eventosProjetos">
-  <h3 class="titulo-eventos">📅 Eventos</h3>
-  <?php if($utilizador_logado): ?>
-  <div class="filtro-eventos">
-    <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
-    <button class="filtro-btn" data-filtro="participa">A participar</button>
-    <button class="filtro-btn" data-filtro="criados">Criados por mim</button>
-  </div>
-  <?php endif; ?>
+  <h3 class="titulo-eventos">🔥 Eventos em Destaque</h3>
   <div class="eventos-grid">
   <?php if($erro_eventos): ?>
     <p class="mensagem-centro"><?php echo htmlspecialchars($erro_eventos); ?></p>
   <?php elseif(empty($eventos)): ?>
     <p class="mensagem-centro">Ainda não existem eventos. Seja o primeiro!</p>
   <?php else: ?>
-    <?php foreach($eventos as $ev): ?>
-      <?php
+    <?php
+      usort($eventos, fn($a,$b) => $b['total_participantes'] - $a['total_participantes']);
+      $top3 = array_slice($eventos, 0, 3);
+      foreach($top3 as $ev):
         $eid      = $ev['evento_id'];
         $criador  = $utilizador_logado && $_SESSION['user']['utilizador_id'] == $ev['utilizador_id'];
         $participa= $utilizador_logado && in_array($eid, $participacoes);
-      ?>
+    ?>
       <div class="evento-card"
            data-criador="<?php echo $ev['utilizador_id']; ?>"
            data-evento="<?php echo $eid; ?>"
@@ -398,6 +202,12 @@ if ($utilizador_logado) {
     <?php endforeach; ?>
   <?php endif; ?>
   </div>
+
+  <?php if(count($eventos) > 3): ?>
+  <div style="text-align:center; margin-top:32px;">
+    <a href="eventos.php" class="btn-ver-mais">Ver Mais Eventos (<?php echo count($eventos); ?> no total) →</a>
+  </div>
+  <?php endif; ?>
 </section>
 
 </main>
@@ -746,25 +556,6 @@ function htmlEncode(s){
 function redirecionarLogin(){
   if(confirm('Precisa de login para participar. Ir para login?'))window.location.href='login.php';
 }
-
-// Filtro
-<?php if($utilizador_logado): ?>
-document.querySelectorAll('.filtro-btn').forEach(btn=>{
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('ativo'));
-    this.classList.add('ativo');
-    const filtro=this.dataset.filtro;
-    document.querySelectorAll('.evento-card').forEach(card=>{
-      const cr=parseInt(card.dataset.criador);
-      const pa=card.dataset.participa==='1';
-      let show=true;
-      if(filtro==='criados')show=cr===utilizadorId;
-      else if(filtro==='participa')show=pa;
-      card.style.display=show?'':'none';
-    });
-  });
-});
-<?php endif; ?>
 
 // Validação form
 <?php if($utilizador_logado): ?>
