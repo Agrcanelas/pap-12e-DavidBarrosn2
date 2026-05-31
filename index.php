@@ -132,6 +132,7 @@ if ($utilizador_logado) {
         case 'campos_vazios': echo 'Preencha todos os campos.'; break;
         case 'tipo_imagem':   echo 'Tipo de imagem inválido.'; break;
         case 'tamanho_imagem':echo 'Imagem demasiado grande (máx 5MB).'; break;
+        case 'datas_invalidas':echo 'A data/hora de fim não pode ser antes do início.'; break;
         case 'bd':            echo 'Erro na base de dados.'; break;
         default:              echo 'Erro ao criar evento.';
       }
@@ -148,18 +149,32 @@ if ($utilizador_logado) {
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label for="data">Data *</label>
-        <input type="date" id="data" name="data" required min="<?php echo date('Y-m-d'); ?>">
+        <label for="data_inicio">Data de Início *</label>
+        <input type="date" id="data_inicio" name="data_inicio" required min="<?php echo date('Y-m-d'); ?>">
       </div>
       <div class="form-group">
-        <label for="local">Local *</label>
-        <input type="text" id="local" name="local" placeholder="Ex: Porto" required maxlength="200">
+        <label for="hora_inicio">Hora de Início *</label>
+        <input type="time" id="hora_inicio" name="hora_inicio" required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="data_fim">Data de Fim *</label>
+        <input type="date" id="data_fim" name="data_fim" required min="<?php echo date('Y-m-d'); ?>">
+      </div>
+      <div class="form-group">
+        <label for="hora_fim">Hora de Fim *</label>
+        <input type="time" id="hora_fim" name="hora_fim" required>
       </div>
     </div>
     <div class="form-group">
-      <label for="imagem">Imagem (opcional · máx 5MB)</label>
-      <input type="file" id="imagem" name="imagem" accept="image/*" onchange="previewImagem(this)">
-      <div id="preview-imagens"></div>
+      <label for="local">Local *</label>
+      <input type="text" id="local" name="local" placeholder="Ex: Porto" required maxlength="200">
+    </div>
+    <div class="form-group">
+      <label>Imagens (opcional · máx 5 fotos · 5MB cada · <strong>1ª foto = capa</strong>)</label>
+      <input type="file" id="imagens" name="imagens[]" accept="image/*" multiple onchange="previewImagens(this)">
+      <div id="preview-imagens" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
     </div>
     <button type="submit" class="btn-submit" id="btnSubmit">Criar Evento</button>
   </form>
@@ -193,7 +208,8 @@ if ($utilizador_logado) {
         <?php endif; ?>
         <h4><?php echo htmlspecialchars($ev['nome']); ?></h4>
         <div class="evento-info">
-          <p><strong>📅 Data:</strong> <?php echo date('d/m/Y',strtotime($ev['data_evento'])); ?></p>
+          <p><strong>📅 Início:</strong> <?php echo date('d/m/Y',strtotime($ev['data_inicio'])).' às '.substr($ev['hora_inicio'],0,5); ?></p>
+          <p><strong>🏁 Fim:</strong> <?php echo date('d/m/Y',strtotime($ev['data_fim'])).' às '.substr($ev['hora_fim'],0,5); ?></p>
           <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($ev['local_evento']); ?></p>
           <p><strong>👥 Participantes:</strong> <?php echo $ev['total_participantes']; ?></p>
         </div>
@@ -322,7 +338,11 @@ function abrirModal(eid){
   if(!eventoAtual)return;
 
   document.getElementById('modalTitulo').textContent=eventoAtual.nome;
-  document.getElementById('modalData').textContent=formatarData(eventoAtual.data_evento);
+  const horaI = eventoAtual.hora_inicio ? eventoAtual.hora_inicio.substring(0,5) : '';
+  const horaF = eventoAtual.hora_fim   ? eventoAtual.hora_fim.substring(0,5)   : '';
+  document.getElementById('modalData').innerHTML =
+    '🗓️ <strong>Início:</strong> ' + formatarData(eventoAtual.data_inicio) + ' às ' + horaI +
+    '<br>🏁 <strong>Fim:</strong> ' + formatarData(eventoAtual.data_fim)   + ' às ' + horaF;
   document.getElementById('modalLocal').textContent=eventoAtual.local_evento;
   document.getElementById('modalDescricao').textContent=eventoAtual.descricao;
 
@@ -567,24 +587,31 @@ if(formEvento){
        !document.getElementById('data').value||!document.getElementById('local').value.trim()){
       e.preventDefault();alert('Preencha todos os campos obrigatórios.');return;
     }
-    const img=document.getElementById('imagem');
-    if(img.files.length&&img.files[0].size>5*1024*1024){
-      e.preventDefault();alert('Imagem demasiado grande (máx 5MB).');return;
-    }
+    const imgs=document.getElementById('imagens');
+    if(imgs.files.length>5){e.preventDefault();alert('Máximo 5 imagens.');return;}
+    for(let f of imgs.files){if(f.size>5*1024*1024){e.preventDefault();alert('Cada imagem tem máx 5MB.');return;}}
     btnSubmit.disabled=true;btnSubmit.textContent='A criar...';
   });
 }
 <?php endif; ?>
 
-function previewImagem(input){
+function previewImagens(input){
   const preview=document.getElementById('preview-imagens');
   preview.innerHTML='';
-  if(!input.files||!input.files[0])return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    preview.innerHTML=`<div class="preview-container"><img src="${e.target.result}" class="preview-img" alt="Preview"></div>`;
-  };
-  reader.readAsDataURL(input.files[0]);
+  if(!input.files||!input.files.length)return;
+  const max=Math.min(input.files.length,5);
+  for(let i=0;i<max;i++){
+    const reader=new FileReader();
+    const idx=i;
+    reader.onload=e=>{
+      const wrap=document.createElement('div');
+      wrap.style.cssText='position:relative;display:inline-block;';
+      const label=idx===0?'<span style="position:absolute;top:4px;left:4px;background:#58b79d;color:white;font-size:11px;padding:2px 6px;border-radius:4px;font-weight:bold;">CAPA</span>':'';
+      wrap.innerHTML=label+`<img src="${e.target.result}" style="width:100px;height:80px;object-fit:cover;border-radius:6px;border:2px solid ${idx===0?'#58b79d':'#c8c0ae'};" alt="Preview ${idx+1}">`;
+      preview.appendChild(wrap);
+    };
+    reader.readAsDataURL(input.files[i]);
+  }
 }
 
 // Auto-hide mensagens

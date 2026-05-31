@@ -278,6 +278,28 @@ try {
 
 .participante-nome { font-weight: bold; color: #333; font-size: 14px; }
 
+
+.galeria-thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #111;
+  overflow-x: auto;
+}
+.thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s, border 0.2s;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+.thumb:hover { opacity: 0.9; }
+.thumb-ativa { opacity: 1; border-color: #58b79d; }
+
 @media(max-width: 768px) {
   .imagem-evento { height: 300px; }
   .evento-meta { grid-template-columns: 1fr; }
@@ -296,9 +318,29 @@ try {
     <?php if (!empty($evento['imagem'])): ?>
       <img src="uploads/eventos/<?php echo htmlspecialchars($evento['imagem']); ?>"
            alt="<?php echo htmlspecialchars($evento['nome']); ?>"
-           class="imagem-evento">
+           class="imagem-evento" id="imgCapa">
     <?php else: ?>
       <div class="sem-imagem">📅</div>
+    <?php endif; ?>
+
+    <?php
+      $extras = [];
+      if (!empty($evento['imagens_extras'])) {
+          $decoded = json_decode($evento['imagens_extras'], true);
+          if (is_array($decoded)) $extras = $decoded;
+      }
+    ?>
+    <?php if (!empty($extras)): ?>
+    <div class="galeria-thumbs">
+      <?php if (!empty($evento['imagem'])): ?>
+        <img src="uploads/eventos/<?php echo htmlspecialchars($evento['imagem']); ?>"
+             class="thumb thumb-ativa" onclick="mudarCapa(this, 'uploads/eventos/<?php echo htmlspecialchars($evento['imagem']); ?>')" alt="Capa">
+      <?php endif; ?>
+      <?php foreach($extras as $img): ?>
+        <img src="uploads/eventos/<?php echo htmlspecialchars($img); ?>"
+             class="thumb" onclick="mudarCapa(this, 'uploads/eventos/<?php echo htmlspecialchars($img); ?>')" alt="Foto">
+      <?php endforeach; ?>
+    </div>
     <?php endif; ?>
 
     <div class="evento-info-principal">
@@ -307,8 +349,15 @@ try {
       <div class="evento-meta">
         <div class="meta-item">
           <span class="meta-icon">📅</span>
-          <span class="meta-label">Data</span>
-          <span class="meta-valor"><?php echo date('d/m/Y', strtotime($evento['data_evento'])); ?></span>
+          <span class="meta-label">Início</span>
+          <span class="meta-valor"><?php echo date('d/m/Y', strtotime($evento['data_inicio'])); ?></span>
+          <span style="font-size:14px;color:#666;">às <?php echo substr($evento['hora_inicio'],0,5); ?></span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-icon">🏁</span>
+          <span class="meta-label">Fim</span>
+          <span class="meta-valor"><?php echo date('d/m/Y', strtotime($evento['data_fim'])); ?></span>
+          <span style="font-size:14px;color:#666;">às <?php echo substr($evento['hora_fim'],0,5); ?></span>
         </div>
         <div class="meta-item">
           <span class="meta-icon">📍</span>
@@ -425,6 +474,13 @@ function participarEvento(eventoId, botao) {
     botao.disabled = false;
   });
 }
+
+function mudarCapa(el, src) {
+  document.getElementById('imgCapa').src = src;
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('thumb-ativa'));
+  el.classList.add('thumb-ativa');
+}
+
 </script>
 
 </body>

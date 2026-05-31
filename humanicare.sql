@@ -46,19 +46,23 @@ CREATE TABLE utilizador (
 -- 4. CRIAR TABELA EVENTO
 -- ============================================
 CREATE TABLE evento (
-    evento_id     INT NOT NULL AUTO_INCREMENT,
-    nome          VARCHAR(200) NOT NULL,
-    descricao     TEXT NULL,
-    data_evento   DATE NOT NULL,
-    local_evento  VARCHAR(200) NOT NULL,
-    vagas         INT NOT NULL DEFAULT 0,
-    imagem        VARCHAR(255) NULL,
-    utilizador_id INT NOT NULL,
-    data_criacao  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    evento_id      INT NOT NULL AUTO_INCREMENT,
+    nome           VARCHAR(200) NOT NULL,
+    descricao      TEXT NULL,
+    data_inicio    DATE NOT NULL,
+    hora_inicio    TIME NOT NULL DEFAULT '00:00:00',
+    data_fim       DATE NOT NULL,
+    hora_fim       TIME NOT NULL DEFAULT '23:59:00',
+    local_evento   VARCHAR(200) NOT NULL,
+    vagas          INT NOT NULL DEFAULT 0,
+    imagem         VARCHAR(255) NULL,
+    imagens_extras JSON NULL,
+    utilizador_id  INT NOT NULL,
+    data_criacao   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (evento_id),
     INDEX idx_utilizador   (utilizador_id),
-    INDEX idx_data_evento  (data_evento),
+    INDEX idx_data_inicio  (data_inicio),
     INDEX idx_data_criacao (data_criacao),
 
     CONSTRAINT fk_evento_utilizador
@@ -132,54 +136,54 @@ INSERT INTO utilizador (nome, email, senha, telefone) VALUES
 -- ============================================
 -- 8. INSERIR EVENTOS DE TESTE
 -- ============================================
-INSERT INTO evento (nome, descricao, data_evento, local_evento, vagas, utilizador_id) VALUES
+INSERT INTO evento (nome, descricao, data_inicio, hora_inicio, data_fim, hora_fim, local_evento, vagas, utilizador_id) VALUES
 ('Limpeza da Praia de Matosinhos',
  'Acao de voluntariado para limpeza da praia. Traga luvas e sacos do lixo. Vamos juntos manter as nossas praias limpas!',
- '2026-02-15', 'Praia de Matosinhos, Porto', 50, 1),
+ '2026-02-15', '09:00:00', '2026-02-15', '18:00:00', 'Praia de Matosinhos, Porto', 50, 1),
 
 ('Plantacao de Arvores no Parque da Cidade',
  'Vamos plantar arvores nativas no Parque da Cidade. Atividade adequada para todas as idades. Material fornecido.',
- '2026-03-01', 'Parque da Cidade, Porto', 40, 1),
+ '2026-03-01', '09:00:00', '2026-03-01', '18:00:00', 'Parque da Cidade, Porto', 40, 1),
 
 ('Workshop de Reciclagem Criativa',
  'Aprenda a transformar materiais reciclaveis em objetos uteis e decorativos. Oficina pratica e gratuita.',
- '2026-02-20', 'Centro Cultural de Vila Nova de Gaia', 25, 2),
+ '2026-02-20', '09:00:00', '2026-02-20', '18:00:00', 'Centro Cultural de Vila Nova de Gaia', 25, 2),
 
 ('Recolha de Alimentos para Familias Carenciadas',
  'Campanha solidaria de recolha de alimentos nao pereciveis. Doe e ajude quem mais precisa.',
- '2026-02-10', 'Supermercado Continente, Gaia', 30, 2),
+ '2026-02-10', '09:00:00', '2026-02-10', '18:00:00', 'Supermercado Continente, Gaia', 30, 2),
 
 ('Visita a Lar de Idosos',
  'Passar uma tarde com os idosos, ouvir historias e fazer companhia. Levar alegria e o melhor presente.',
- '2026-02-25', 'Lar Sao Vicente de Paulo, Porto', 15, 3),
+ '2026-02-25', '09:00:00', '2026-02-25', '18:00:00', 'Lar Sao Vicente de Paulo, Porto', 15, 3),
 
 ('Maratona de Leitura em Bibliotecas',
  'Voluntarios vao ler historias para criancas em bibliotecas publicas. Ajude a promover a leitura!',
- '2026-03-05', 'Biblioteca Municipal do Porto', 20, 3),
+ '2026-03-05', '09:00:00', '2026-03-05', '18:00:00', 'Biblioteca Municipal do Porto', 20, 3),
 
 ('Caminhada Solidaria pela Saude Mental',
  'Caminhada de sensibilizacao para a importancia da saude mental. Todos sao bem-vindos!',
- '2026-03-10', 'Jardim do Passeio Alegre, Porto', 100, 4),
+ '2026-03-10', '09:00:00', '2026-03-10', '18:00:00', 'Jardim do Passeio Alegre, Porto', 100, 4),
 
 ('Oficina de Compostagem Domestica',
  'Aprenda a fazer compostagem em casa e reduzir o desperdicio. Workshop pratico com especialistas.',
- '2026-02-28', 'Horta Comunitaria de Gaia', 20, 4),
+ '2026-02-28', '09:00:00', '2026-02-28', '18:00:00', 'Horta Comunitaria de Gaia', 20, 4),
 
 ('Apoio Escolar a Criancas',
  'Voluntariado de explicacoes gratuitas para criancas do 1o ciclo. Ajude no sucesso escolar!',
- '2026-03-15', 'Junta de Freguesia de Campanha', 10, 5),
+ '2026-03-15', '09:00:00', '2026-03-15', '18:00:00', 'Junta de Freguesia de Campanha', 10, 5),
 
 ('Feira de Troca de Livros e Brinquedos',
  'Traga livros e brinquedos que ja nao usa e troque por outros. Economia circular em acao!',
- '2026-03-20', 'Praca da Republica, Gaia', 60, 5),
+ '2026-03-20', '09:00:00', '2026-03-20', '18:00:00', 'Praca da Republica, Gaia', 60, 5),
 
 ('Construcao de Casas para Animais de Rua',
  'Vamos construir abrigos para animais abandonados. Traga ferramentas e boa vontade!',
- '2026-02-18', 'Associacao Protetora dos Animais, Porto', 25, 6),
+ '2026-02-18', '09:00:00', '2026-02-18', '18:00:00', 'Associacao Protetora dos Animais, Porto', 25, 6),
 
 ('Limpeza das Margens do Rio Douro',
  'Acao de limpeza das margens do Rio Douro. Proteja o nosso rio e a biodiversidade local.',
- '2026-03-25', 'Cais de Gaia', 45, 6);
+ '2026-03-25', '09:00:00', '2026-03-25', '18:00:00', 'Cais de Gaia', 45, 6);
 
 -- ============================================
 -- 9. INSERIR PARTICIPACOES DE TESTE
@@ -228,7 +232,10 @@ SELECT
     e.evento_id,
     e.nome,
     e.descricao,
-    e.data_evento,
+    e.data_inicio,
+    e.hora_inicio,
+    e.data_fim,
+    e.hora_fim,
     e.local_evento,
     e.vagas,
     e.imagem,
@@ -250,7 +257,10 @@ SELECT
     p.utilizador_id,
     p.data_participacao,
     e.nome        AS evento_nome,
-    e.data_evento,
+    e.data_inicio,
+    e.hora_inicio,
+    e.data_fim,
+    e.hora_fim,
     e.local_evento,
     u.nome        AS participante_nome,
     u.email       AS participante_email,
