@@ -584,7 +584,9 @@ const btnSubmit=document.getElementById('btnSubmit');
 if(formEvento){
   formEvento.addEventListener('submit',function(e){
     if(!document.getElementById('nome').value.trim()||!document.getElementById('descricao').value.trim()||
-       !document.getElementById('data').value||!document.getElementById('local').value.trim()){
+       !document.getElementById('data_inicio').value||!document.getElementById('hora_inicio').value||
+       !document.getElementById('data_fim').value||!document.getElementById('hora_fim').value||
+       !document.getElementById('local').value.trim()){
       e.preventDefault();alert('Preencha todos os campos obrigatórios.');return;
     }
     const imgs=document.getElementById('imagens');

@@ -114,7 +114,8 @@ if ($utilizador_logado) {
         <?php endif; ?>
         <h4><?php echo htmlspecialchars($ev['nome']); ?></h4>
         <div class="evento-info">
-          <p><strong>📅 Data:</strong> <?php echo date('d/m/Y',strtotime($ev['data_evento'])); ?></p>
+          <p><strong>📅 Início:</strong> <?php echo date('d/m/Y',strtotime($ev['data_inicio'])).' às '.substr($ev['hora_inicio'],0,5); ?></p>
+          <p><strong>🏁 Fim:</strong> <?php echo date('d/m/Y',strtotime($ev['data_fim'])).' às '.substr($ev['hora_fim'],0,5); ?></p>
           <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($ev['local_evento']); ?></p>
           <p><strong>👥 Participantes:</strong> <?php echo $ev['total_participantes']; ?></p>
         </div>
@@ -360,7 +361,11 @@ function abrirModal(eid) {
   eventoAtual = eventosData.find(e => e.evento_id == eid);
   if (!eventoAtual) return;
   document.getElementById('modalTitulo').textContent = eventoAtual.nome;
-  document.getElementById('modalData').textContent   = formatarData(eventoAtual.data_evento);
+  const horaI = eventoAtual.hora_inicio ? eventoAtual.hora_inicio.substring(0,5) : '';
+  const horaF = eventoAtual.hora_fim   ? eventoAtual.hora_fim.substring(0,5)   : '';
+  document.getElementById('modalData').innerHTML =
+    '🗓️ <strong>Início:</strong> ' + formatarData(eventoAtual.data_inicio) + ' às ' + horaI +
+    '<br>🏁 <strong>Fim:</strong> ' + formatarData(eventoAtual.data_fim)   + ' às ' + horaF;
   document.getElementById('modalLocal').textContent  = eventoAtual.local_evento;
   document.getElementById('modalDescricao').textContent = eventoAtual.descricao;
   const total = parseInt(eventoAtual.total_participantes);

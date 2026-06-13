@@ -40,7 +40,7 @@ try {
 
     // Eventos criados
     $stmt = $pdo->prepare("
-        SELECT e.evento_id, e.nome, e.data_evento, e.local_evento, e.imagem,
+        SELECT e.evento_id, e.nome, e.data_inicio, e.data_fim, e.hora_inicio, e.hora_fim, e.local_evento, e.imagem,
         (SELECT COUNT(*) FROM participa WHERE evento_id = e.evento_id) as total_p
         FROM evento e
         WHERE e.utilizador_id = :id
@@ -188,7 +188,8 @@ try {
             <?php endif; ?>
             <div class="evento-pub-info">
               <h4><?php echo htmlspecialchars($ev['nome']); ?></h4>
-              <p>📅 <?php echo date('d/m/Y',strtotime($ev['data_evento'])); ?></p>
+              <p>📅 <?php echo date('d/m/Y',strtotime($ev['data_inicio'])).' às '.substr($ev['hora_inicio'],0,5); ?></p>
+              <p>🏁 <?php echo date('d/m/Y',strtotime($ev['data_fim'])).' às '.substr($ev['hora_fim'],0,5); ?></p>
               <p>📍 <?php echo htmlspecialchars($ev['local_evento']); ?></p>
               <p>👥 <?php echo $ev['total_p']; ?> participantes</p>
             </div>
