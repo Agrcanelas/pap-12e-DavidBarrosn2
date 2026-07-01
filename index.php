@@ -182,7 +182,7 @@ if ($utilizador_logado) {
 </section>
 
 <section id="eventosProjetos">
-  <h3 class="titulo-eventos">🔥 Eventos em Destaque</h3>
+  <h3 class="titulo-eventos">🔥 Eventos</h3>
   <div class="eventos-grid">
   <?php if($erro_eventos): ?>
     <p class="mensagem-centro"><?php echo htmlspecialchars($erro_eventos); ?></p>
@@ -190,9 +190,8 @@ if ($utilizador_logado) {
     <p class="mensagem-centro">Ainda não existem eventos. Seja o primeiro!</p>
   <?php else: ?>
     <?php
-      usort($eventos, fn($a,$b) => $b['total_participantes'] - $a['total_participantes']);
-      $top3 = array_slice($eventos, 0, 3);
-      foreach($top3 as $ev):
+      usort($eventos, fn($a,$b) => strtotime($b['data_criacao']) - strtotime($a['data_criacao']));
+      foreach($eventos as $ev):
         $eid      = $ev['evento_id'];
         $criador  = $utilizador_logado && $_SESSION['user']['utilizador_id'] == $ev['utilizador_id'];
         $participa= $utilizador_logado && in_array($eid, $participacoes);
@@ -218,12 +217,6 @@ if ($utilizador_logado) {
     <?php endforeach; ?>
   <?php endif; ?>
   </div>
-
-  <?php if(count($eventos) > 3): ?>
-  <div style="text-align:center; margin-top:32px;">
-    <a href="eventos.php" class="btn-ver-mais">Ver Mais Eventos (<?php echo count($eventos); ?> no total) →</a>
-  </div>
-  <?php endif; ?>
 </section>
 
 </main>
@@ -634,3 +627,40 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
