@@ -123,6 +123,41 @@ CREATE TABLE comentario (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================
+-- 6b. TRIGGERS - LIMITE DE 5 IMAGENS POR EVENTO
+--     (1 imagem de capa + até 4 imagens extra = máx. 5)
+-- ============================================
+DROP TRIGGER IF EXISTS trg_evento_limite_imagens_insert;
+DROP TRIGGER IF EXISTS trg_evento_limite_imagens_update;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_evento_limite_imagens_insert
+BEFORE INSERT ON evento
+FOR EACH ROW
+BEGIN
+    IF NEW.imagens_extras IS NOT NULL
+       AND JSON_VALID(NEW.imagens_extras)
+       AND JSON_LENGTH(NEW.imagens_extras) > 4 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Limite excedido: máximo de 5 imagens por evento (1 capa + 4 extras).';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_evento_limite_imagens_update
+BEFORE UPDATE ON evento
+FOR EACH ROW
+BEGIN
+    IF NEW.imagens_extras IS NOT NULL
+       AND JSON_VALID(NEW.imagens_extras)
+       AND JSON_LENGTH(NEW.imagens_extras) > 4 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Limite excedido: máximo de 5 imagens por evento (1 capa + 4 extras).';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- ============================================
 -- 7. INSERIR UTILIZADORES DE TESTE
 -- ============================================
 INSERT INTO utilizador (nome, email, senha, telefone) VALUES
