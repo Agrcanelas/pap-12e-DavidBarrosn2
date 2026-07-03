@@ -133,7 +133,12 @@ if ($utilizador_logado) {
         case 'tipo_imagem':   echo 'Tipo de imagem inválido.'; break;
         case 'tamanho_imagem':echo 'Imagem demasiado grande (máx 5MB).'; break;
         case 'datas_invalidas':echo 'A data/hora de fim não pode ser antes do início.'; break;
-        case 'bd':            echo 'Erro na base de dados.'; break;
+        case 'bd':
+          echo 'Erro na base de dados.';
+          if (!empty($_GET['detalhe'])) {
+              echo '<br><small style="font-weight:normal;">' . htmlspecialchars($_GET['detalhe']) . '</small>';
+          }
+          break;
         default:              echo 'Erro ao criar evento.';
       }
     ?></div>
@@ -627,40 +632,3 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

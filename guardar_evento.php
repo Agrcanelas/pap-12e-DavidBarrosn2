@@ -117,7 +117,10 @@ try {
         unlink("uploads/eventos/" . $imagem_capa);
     foreach ($imagens_extras as $img)
         if (file_exists("uploads/eventos/" . $img)) unlink("uploads/eventos/" . $img);
-    header("Location: index.php?erro=bd#criar-evento");
+    // Mostra o erro real da BD (temporário, para diagnóstico).
+    // Depois de confirmares que está tudo a funcionar, podes voltar a usar
+    // apenas: header("Location: index.php?erro=bd#criar-evento"); exit;
+    header("Location: index.php?erro=bd&detalhe=" . urlencode($e->getMessage()) . "#criar-evento");
     exit;
 
 } catch (Exception $e) {
