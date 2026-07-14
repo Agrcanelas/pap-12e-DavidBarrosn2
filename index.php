@@ -126,7 +126,7 @@ if ($utilizador_logado) {
 
 <section id="criar-evento">
 <?php if(!$utilizador_logado): ?>
-  <div class="login-prompt"><p>✨ Para criar eventos faça <a href="login.php">login</a>.</p></div>
+  <div class="login-prompt"><p>✨ Para criar eventos, faça <a href="login.php">login</a> ou <a href="register.php" style="color:#2563eb;">registe-se</a>.</p></div>
 <?php else: ?>
   <h3>✏️ Criar Evento</h3>
   <?php if(isset($_GET['sucesso'])): ?><div class="mensagem sucesso">✅ Evento criado com sucesso!</div><?php endif; ?>

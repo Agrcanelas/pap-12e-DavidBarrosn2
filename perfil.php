@@ -69,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_dados'])) {
     $telefone = trim($_POST['telefone']);
     $nova_senha = trim($_POST['nova_senha']);
     $metodo_contacto = $_POST['metodo_contacto'] ?? 'email';
+    $descricao = trim($_POST['descricao'] ?? '');
 
     // Validar domínio do email (@gmail.com ou @yahoo.com)
     $dominios_permitidos = ['gmail.com', 'yahoo.com'];
@@ -94,23 +95,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_dados'])) {
     try {
         if (!empty($nova_senha)) {
             // Atualizar com nova senha
-            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone, metodo_contacto = :metodo_contacto, senha = :senha WHERE utilizador_id = :id");
+            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone, metodo_contacto = :metodo_contacto, descricao = :descricao, senha = :senha WHERE utilizador_id = :id");
             $stmt->execute([
                 ':nome' => $nome,
                 ':email' => $email,
                 ':telefone' => $telefone,
                 ':metodo_contacto' => $metodo_contacto,
+                ':descricao' => $descricao,
                 ':senha' => $nova_senha,
                 ':id' => $utilizador_id
             ]);
         } else {
             // Atualizar sem alterar senha
-            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone, metodo_contacto = :metodo_contacto WHERE utilizador_id = :id");
+            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone, metodo_contacto = :metodo_contacto, descricao = :descricao WHERE utilizador_id = :id");
             $stmt->execute([
                 ':nome' => $nome,
                 ':email' => $email,
                 ':telefone' => $telefone,
                 ':metodo_contacto' => $metodo_contacto,
+                ':descricao' => $descricao,
                 ':id' => $utilizador_id
             ]);
         }
@@ -120,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_dados'])) {
         $_SESSION['user']['email'] = $email;
         $_SESSION['user']['telefone'] = $telefone;
         $_SESSION['user']['metodo_contacto'] = $metodo_contacto;
+        $_SESSION['user']['descricao'] = $descricao;
         
         $mensagem = "Dados atualizados com sucesso!";
     } catch (PDOException $e) {
@@ -229,6 +233,16 @@ $total_participacoes = $stmt->fetch()['total'];
   color: #666;
   margin: 5px 0;
   font-size: 16px;
+}
+
+.perfil-bio {
+  color: #4a4a4a !important;
+  font-size: 15px !important;
+  font-style: italic;
+  line-height: 1.6;
+  margin-top: 12px !important;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
 }
 
 .perfil-stats {
@@ -432,6 +446,10 @@ $total_participacoes = $stmt->fetch()['total'];
         <p>📱 <?php echo htmlspecialchars($usuario['telefone']); ?></p>
       <?php endif; ?>
       <p>📅 Membro desde <?php echo date('d/m/Y', strtotime($usuario['data_registo'])); ?></p>
+
+      <?php if (!empty($usuario['descricao'])): ?>
+        <p class="perfil-bio"><?php echo nl2br(htmlspecialchars($usuario['descricao'])); ?></p>
+      <?php endif; ?>
       
       <div class="perfil-stats">
         <div class="stat-card">
@@ -483,6 +501,12 @@ $total_participacoes = $stmt->fetch()['total'];
           <option value="telefone" id="opcao_telefone" <?php echo empty($usuario['telefone']) ? 'disabled' : ''; ?> <?php echo (($usuario['metodo_contacto'] ?? 'email') === 'telefone') ? 'selected' : ''; ?>>Telemóvel</option>
         </select>
         <span class="campo-hint" id="hint_contacto">Esta é a forma de contacto mostrada aos outros utilizadores nos seus eventos.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="descricao">Sobre mim <span style="color:#999; font-weight:normal;">(opcional)</span></label>
+        <textarea id="descricao" name="descricao" rows="4" maxlength="500" placeholder="Fala um pouco sobre ti..."><?php echo htmlspecialchars($usuario['descricao'] ?? ''); ?></textarea>
+        <span class="campo-hint">Aparece no teu perfil, visível a outros utilizadores.</span>
       </div>
       
       <button type="submit" class="btn-submit">💾 Guardar Alterações</button>

@@ -110,7 +110,7 @@ if(!isset($_SESSION['eventos'])) {
 
   <section id="criar-evento">
     <div class="login-prompt">
-      <p>✨ Para criar eventos faça <a href="login.php">login</a>.</p>
+      <p>✨ Para criar eventos, faça <a href="login.php">login</a> ou <a href="register.php" style="color:#2563eb;">registe-se</a>.</p>
     </div>
   </section>
 

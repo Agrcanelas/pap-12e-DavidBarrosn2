@@ -18,7 +18,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['utilizador_id'] == $perfil_id
 try {
     // Buscar dados do utilizador
     $stmt = $pdo->prepare("
-        SELECT utilizador_id, nome, foto_perfil, data_registo
+        SELECT utilizador_id, nome, foto_perfil, data_registo, descricao
         FROM utilizador WHERE utilizador_id = :id
     ");
     $stmt->execute([':id' => $perfil_id]);
@@ -86,6 +86,11 @@ try {
 }
 
 .perfil-info h2 { color: #7a8c3c; margin: 0 0 8px; font-size: 30px; }
+.perfil-bio {
+  color: #4a4a4a; font-size: 15px; font-style: italic;
+  line-height: 1.6; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+}
 .perfil-info p  { color: #666; margin: 4px 0; font-size: 15px; }
 
 .perfil-stats {
@@ -161,6 +166,9 @@ try {
     <div class="perfil-info">
       <h2><?php echo htmlspecialchars($perfil['nome']); ?></h2>
       <p>📅 Membro desde <?php echo date('d/m/Y',strtotime($perfil['data_registo'])); ?></p>
+      <?php if (!empty($perfil['descricao'])): ?>
+        <p class="perfil-bio"><?php echo nl2br(htmlspecialchars($perfil['descricao'])); ?></p>
+      <?php endif; ?>
       <div class="perfil-stats">
         <div class="stat-card">
           <span class="stat-number"><?php echo $total_eventos; ?></span>

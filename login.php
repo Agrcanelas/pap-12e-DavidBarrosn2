@@ -140,13 +140,13 @@ body {
 
 .extra-links a {
   text-decoration: none;
-  color: #58b79d;
+  color: #2563eb;
   font-weight: bold;
   transition: color 0.3s;
 }
 
 .extra-links a:hover {
-  color: #4a9c82;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
@@ -220,7 +220,7 @@ body {
     </form>
 
     <div class="extra-links">
-      <p>Não tem conta? <a href="register.php">Criar nova conta</a></p>
+      <p>Não tem conta? <a href="register.php">Registe-se</a></p>
     </div>
   </div>
 </main>
