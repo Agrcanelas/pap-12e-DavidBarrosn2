@@ -8,6 +8,7 @@ $participacoes = [];
 try {
     $stmt = $pdo->query("
         SELECT e.*, u.nome as criador_nome, u.foto_perfil as criador_foto,
+        u.email as criador_email, u.telefone as criador_telefone, u.metodo_contacto as criador_metodo_contacto,
         (SELECT COUNT(*) FROM participa WHERE evento_id = e.evento_id) as total_participantes
         FROM evento e
         JOIN utilizador u ON e.utilizador_id = u.utilizador_id
@@ -151,6 +152,7 @@ if ($utilizador_logado) {
         <div class="modal-criador-info">
           <small>Organizado por</small>
           <strong id="modalCriadorNome"></strong>
+          <small id="modalCriadorContacto" class="modal-criador-contacto"></small>
         </div>
       </div>
       <div class="modal-info">
@@ -380,6 +382,15 @@ function abrirModal(eid) {
     fotoDiv.innerHTML=`<div class="modal-criador-placeholder">${eventoAtual.criador_nome.charAt(0).toUpperCase()}</div>`;
   }
   document.getElementById('modalCriadorNome').textContent = eventoAtual.criador_nome;
+
+  // Contacto do criador (email ou telefone, conforme a preferência dele)
+  const contactoEl = document.getElementById('modalCriadorContacto');
+  if (eventoAtual.criador_metodo_contacto === 'telefone' && eventoAtual.criador_telefone) {
+    contactoEl.textContent = '📞 ' + eventoAtual.criador_telefone;
+  } else {
+    contactoEl.textContent = '📧 ' + eventoAtual.criador_email;
+  }
+
   const footer = document.getElementById('modalFooter');
   const eCriador  = utilizadorLogado && utilizadorId == eventoAtual.utilizador_id;
   const participa = utilizadorLogado && participacoes.includes(parseInt(eventoAtual.evento_id));

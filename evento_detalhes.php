@@ -12,6 +12,7 @@ $evento_id = intval($_GET['id']);
 try {
     $stmt = $pdo->prepare("
         SELECT e.*, u.nome as criador_nome, u.foto_perfil as criador_foto,
+        u.email as criador_email, u.telefone as criador_telefone, u.metodo_contacto as criador_metodo_contacto,
         (SELECT COUNT(*) FROM participa WHERE evento_id = e.evento_id) as total_participantes
         FROM evento e 
         JOIN utilizador u ON e.utilizador_id = u.utilizador_id 
@@ -389,6 +390,14 @@ try {
         <div class="criador-detalhes">
           <h4>Organizado por</h4>
           <p><?php echo htmlspecialchars($evento['criador_nome']); ?></p>
+          <?php
+            $metodo = $evento['criador_metodo_contacto'] ?? 'email';
+            if ($metodo === 'telefone' && !empty($evento['criador_telefone'])):
+          ?>
+            <p class="criador-contacto">📞 <?php echo htmlspecialchars($evento['criador_telefone']); ?></p>
+          <?php else: ?>
+            <p class="criador-contacto">📧 <?php echo htmlspecialchars($evento['criador_email']); ?></p>
+          <?php endif; ?>
         </div>
       </div>
 

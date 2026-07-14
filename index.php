@@ -10,6 +10,7 @@ $erro_eventos = null;
 try {
     $stmt = $pdo->query("
         SELECT e.*, u.nome as criador_nome, u.foto_perfil as criador_foto,
+        u.email as criador_email, u.telefone as criador_telefone, u.metodo_contacto as criador_metodo_contacto,
         (SELECT COUNT(*) FROM participa WHERE evento_id = e.evento_id) as total_participantes
         FROM evento e
         JOIN utilizador u ON e.utilizador_id = u.utilizador_id
@@ -85,19 +86,23 @@ if ($utilizador_logado) {
   <div class="banner-img">
     <div class="slideshow-container">
       <div class="mySlides fade">
-        <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado">
+        <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=900&h=600&fit=crop&auto=format"
+             alt="Voluntariado" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
         <div class="text-slide">Ajude o Planeta</div>
       </div>
       <div class="mySlides fade">
-        <img src="https://picsum.photos/800/600?random=1" alt="Natureza">
+        <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=900&h=600&fit=crop&auto=format"
+             alt="Natureza" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
         <div class="text-slide">Preserve a Natureza</div>
       </div>
       <div class="mySlides fade">
-        <img src="https://picsum.photos/800/600?random=2" alt="Comunidade">
+        <img src="https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?w=900&h=600&fit=crop&auto=format"
+             alt="Comunidade" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
         <div class="text-slide">Fortaleça a Comunidade</div>
       </div>
       <div class="mySlides fade">
-        <img src="https://picsum.photos/800/600?random=3" alt="Futuro">
+        <img src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=900&h=600&fit=crop&auto=format"
+             alt="Futuro" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
         <div class="text-slide">Construa o Futuro</div>
       </div>
       <a class="prev" onclick="plusSlides(-1)">❮</a>
@@ -242,6 +247,7 @@ if ($utilizador_logado) {
         <div class="modal-criador-info">
           <small>Organizado por</small>
           <strong id="modalCriadorNome"></strong>
+          <small id="modalCriadorContacto" class="modal-criador-contacto"></small>
         </div>
       </div>
 
@@ -362,6 +368,14 @@ function abrirModal(eid){
     fotoDiv.innerHTML=`<div class="modal-criador-placeholder">${eventoAtual.criador_nome.charAt(0).toUpperCase()}</div>`;
   }
   document.getElementById('modalCriadorNome').textContent=eventoAtual.criador_nome;
+
+  // Contacto do criador (email ou telefone, conforme a preferência dele)
+  const contactoEl = document.getElementById('modalCriadorContacto');
+  if (eventoAtual.criador_metodo_contacto === 'telefone' && eventoAtual.criador_telefone) {
+    contactoEl.textContent = '📞 ' + eventoAtual.criador_telefone;
+  } else {
+    contactoEl.textContent = '📧 ' + eventoAtual.criador_email;
+  }
 
   // Botões footer
   const footer=document.getElementById('modalFooter');

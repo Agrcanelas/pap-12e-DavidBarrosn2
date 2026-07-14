@@ -564,6 +564,16 @@ a.usuario-logado:hover {
 
 .modal-criador-info small { color: #666; font-size: 11px; display: block; }
 .modal-criador-info strong { color: #3a7a62; font-size: 15px; }
+.modal-criador-contacto { color: #58b79d !important; font-weight: bold; margin-top: 2px; }
+
+/* Fallback do carrossel caso uma imagem não carregue */
+.mySlides.slide-fallback {
+  background: linear-gradient(135deg, #58b79d, #7a8c3c);
+  display: flex; align-items: center; justify-content: center;
+}
+.mySlides.slide-fallback::before {
+  content: "🌿"; font-size: 80px; opacity: 0.85;
+}
 
 .modal-info-item {
   display: flex; align-items: center; margin-bottom: 10px;

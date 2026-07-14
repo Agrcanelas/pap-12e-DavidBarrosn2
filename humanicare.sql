@@ -35,6 +35,7 @@ CREATE TABLE utilizador (
     foto_perfil   VARCHAR(255) NULL,
     senha         VARCHAR(255) NOT NULL,
     telefone      VARCHAR(20)  NULL,
+    metodo_contacto ENUM('email','telefone') NOT NULL DEFAULT 'email',
     data_registo  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (utilizador_id),

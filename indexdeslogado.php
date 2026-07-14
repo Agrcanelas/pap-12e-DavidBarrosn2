@@ -49,22 +49,26 @@ if(!isset($_SESSION['eventos'])) {
     <div class="banner-img">
       <div class="slideshow-container">
         <div class="mySlides fade">
-          <img src="https://media.iatiseguros.com/wp-content/uploads/sites/6/2020/01/20115833/tipos-voluntariado.jpg" alt="Voluntariado">
+          <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=900&h=600&fit=crop&auto=format"
+               alt="Voluntariado" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
           <div class="text-slide">Ajude o Planeta</div>
         </div>
 
         <div class="mySlides fade">
-          <img src="https://picsum.photos/800/600?random=1" alt="Natureza">
+          <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=900&h=600&fit=crop&auto=format"
+               alt="Natureza" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
           <div class="text-slide">Preserve a Natureza</div>
         </div>
 
         <div class="mySlides fade">
-          <img src="https://picsum.photos/800/600?random=2" alt="Comunidade">
+          <img src="https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?w=900&h=600&fit=crop&auto=format"
+               alt="Comunidade" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
           <div class="text-slide">Fortaleça a Comunidade</div>
         </div>
 
         <div class="mySlides fade">
-          <img src="https://picsum.photos/800/600?random=3" alt="Futuro">
+          <img src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=900&h=600&fit=crop&auto=format"
+               alt="Futuro" onerror="this.onerror=null;this.parentElement.classList.add('slide-fallback');this.style.display='none';">
           <div class="text-slide">Construa o Futuro</div>
         </div>
 

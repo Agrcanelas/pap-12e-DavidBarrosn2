@@ -68,25 +68,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_dados'])) {
     $email = trim($_POST['email']);
     $telefone = trim($_POST['telefone']);
     $nova_senha = trim($_POST['nova_senha']);
-    
+    $metodo_contacto = $_POST['metodo_contacto'] ?? 'email';
+
+    // Validar domínio do email (@gmail.com ou @yahoo.com)
+    $dominios_permitidos = ['gmail.com', 'yahoo.com'];
+    $email_valido = false;
+    if (strpos($email, '@') !== false) {
+        $dominio = strtolower(trim(substr($email, strpos($email, '@') + 1)));
+        if (in_array($dominio, $dominios_permitidos)) {
+            $email_valido = true;
+        }
+    }
+
+    // Sem telefone só pode ficar com o email como forma de contacto
+    if ($telefone === '') {
+        $metodo_contacto = 'email';
+    }
+    if (!in_array($metodo_contacto, ['email', 'telefone'])) {
+        $metodo_contacto = 'email';
+    }
+
+    if (!$email_valido) {
+        $erro = "Email inválido. O email tem de ser @gmail.com ou @yahoo.com.";
+    } else {
     try {
         if (!empty($nova_senha)) {
             // Atualizar com nova senha
-            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone, senha = :senha WHERE utilizador_id = :id");
+            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone, metodo_contacto = :metodo_contacto, senha = :senha WHERE utilizador_id = :id");
             $stmt->execute([
                 ':nome' => $nome,
                 ':email' => $email,
                 ':telefone' => $telefone,
+                ':metodo_contacto' => $metodo_contacto,
                 ':senha' => $nova_senha,
                 ':id' => $utilizador_id
             ]);
         } else {
             // Atualizar sem alterar senha
-            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone WHERE utilizador_id = :id");
+            $stmt = $pdo->prepare("UPDATE utilizador SET nome = :nome, email = :email, telefone = :telefone, metodo_contacto = :metodo_contacto WHERE utilizador_id = :id");
             $stmt->execute([
                 ':nome' => $nome,
                 ':email' => $email,
                 ':telefone' => $telefone,
+                ':metodo_contacto' => $metodo_contacto,
                 ':id' => $utilizador_id
             ]);
         }
@@ -95,10 +119,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_dados'])) {
         $_SESSION['user']['nome'] = $nome;
         $_SESSION['user']['email'] = $email;
         $_SESSION['user']['telefone'] = $telefone;
+        $_SESSION['user']['metodo_contacto'] = $metodo_contacto;
         
         $mensagem = "Dados atualizados com sucesso!";
     } catch (PDOException $e) {
         $erro = "Erro ao atualizar dados: " . $e->getMessage();
+    }
     }
 }
 
@@ -261,7 +287,8 @@ $total_participacoes = $stmt->fetch()['total'];
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 12px 16px;
   border: 2px solid #c8c0ae;
@@ -273,11 +300,19 @@ $total_participacoes = $stmt->fetch()['total'];
   box-sizing: border-box;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: #58b79d;
   background: white;
   box-shadow: 0 0 0 3px rgba(88, 183, 157, 0.1);
+}
+
+.campo-hint {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
 }
 
 .form-row {
@@ -432,13 +467,22 @@ $total_participacoes = $stmt->fetch()['total'];
       <div class="form-row">
         <div class="form-group">
           <label for="telefone">Telefone</label>
-          <input type="tel" id="telefone" name="telefone" value="<?php echo htmlspecialchars($usuario['telefone'] ?? ''); ?>">
+          <input type="tel" id="telefone" name="telefone" value="<?php echo htmlspecialchars($usuario['telefone'] ?? ''); ?>" oninput="atualizarMetodoContacto()">
         </div>
         
         <div class="form-group">
           <label for="nova_senha">Nova Palavra-passe (deixe em branco para manter a atual)</label>
           <input type="password" id="nova_senha" name="nova_senha">
         </div>
+      </div>
+
+      <div class="form-group">
+        <label for="metodo_contacto">Forma de contacto preferida</label>
+        <select id="metodo_contacto" name="metodo_contacto">
+          <option value="email" <?php echo (($usuario['metodo_contacto'] ?? 'email') === 'email') ? 'selected' : ''; ?>>Email</option>
+          <option value="telefone" id="opcao_telefone" <?php echo empty($usuario['telefone']) ? 'disabled' : ''; ?> <?php echo (($usuario['metodo_contacto'] ?? 'email') === 'telefone') ? 'selected' : ''; ?>>Telemóvel</option>
+        </select>
+        <span class="campo-hint" id="hint_contacto">Esta é a forma de contacto mostrada aos outros utilizadores nos seus eventos.</span>
       </div>
       
       <button type="submit" class="btn-submit">💾 Guardar Alterações</button>
@@ -449,6 +493,25 @@ $total_participacoes = $stmt->fetch()['total'];
 <footer>
   <p>© 2025 HumaniCare - Juntos por um futuro melhor 🌿</p>
 </footer>
+
+<script>
+function atualizarMetodoContacto() {
+  const telefone = document.getElementById('telefone').value.trim();
+  const select    = document.getElementById('metodo_contacto');
+  const opcaoTel  = document.getElementById('opcao_telefone');
+  const hint      = document.getElementById('hint_contacto');
+
+  if (telefone === '') {
+    opcaoTel.disabled = true;
+    select.value = 'email';
+    hint.textContent = 'Sem telemóvel indicado, só pode escolher o email.';
+  } else {
+    opcaoTel.disabled = false;
+    hint.textContent = 'Esta é a forma de contacto mostrada aos outros utilizadores nos seus eventos.';
+  }
+}
+document.addEventListener('DOMContentLoaded', atualizarMetodoContacto);
+</script>
 
 </body>
 </html>

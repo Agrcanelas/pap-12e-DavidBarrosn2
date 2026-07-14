@@ -1,15 +1,42 @@
 <?php
 session_start();
 
+// Domínios de email aceites
+$dominios_permitidos = ['gmail.com', 'yahoo.com'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome     = trim($_POST['nome']);
-    $email    = trim($_POST['email']);
-    $password = $_POST['password'];
+    $nome            = trim($_POST['nome']);
+    $email           = trim($_POST['email']);
+    $password        = $_POST['password'];
+    $telefone        = trim($_POST['telefone'] ?? '');
+    $metodo_contacto = $_POST['metodo_contacto'] ?? 'email';
+
+    // Se não preencheu telefone, só pode ficar com email como forma de contacto
+    if ($telefone === '') {
+        $metodo_contacto = 'email';
+    }
+    if (!in_array($metodo_contacto, ['email', 'telefone'])) {
+        $metodo_contacto = 'email';
+    }
+
+    // Validar domínio do email (@gmail.com ou @yahoo.com)
+    $email_valido = false;
+    if (strpos($email, '@') !== false) {
+        $dominio = strtolower(trim(substr($email, strpos($email, '@') + 1)));
+        if (in_array($dominio, $dominios_permitidos)) {
+            $email_valido = true;
+        }
+    }
+
+    if (!$email_valido) {
+        $erro = "Email inválido. O email tem de ser @gmail.com ou @yahoo.com.";
+    }
 
     $dsn     = "mysql:host=localhost;dbname=humanicare;charset=utf8mb4";
     $db_user = "root";
     $db_pass = "";
 
+    if (!isset($erro)) {
     try {
         $pdo = new PDO($dsn, $db_user, $db_pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -54,21 +81,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (!isset($erro)) {
-                $stmt = $pdo->prepare("INSERT INTO utilizador (nome, email, senha, foto_perfil) VALUES (:nome, :email, :senha, :foto_perfil)");
+                $stmt = $pdo->prepare("INSERT INTO utilizador (nome, email, senha, foto_perfil, telefone, metodo_contacto) VALUES (:nome, :email, :senha, :foto_perfil, :telefone, :metodo_contacto)");
                 $stmt->execute([
-                    'nome'        => $nome,
-                    'email'       => $email,
-                    'senha'       => $password,
-                    'foto_perfil' => $foto_perfil
+                    'nome'            => $nome,
+                    'email'           => $email,
+                    'senha'           => $password,
+                    'foto_perfil'     => $foto_perfil,
+                    'telefone'        => $telefone !== '' ? $telefone : null,
+                    'metodo_contacto' => $metodo_contacto
                 ]);
 
                 $utilizador_id = $pdo->lastInsertId();
 
                 $_SESSION['user'] = [
-                    'utilizador_id' => $utilizador_id,
-                    'nome'          => $nome,
-                    'email'         => $email,
-                    'foto_perfil'   => $foto_perfil
+                    'utilizador_id'   => $utilizador_id,
+                    'nome'            => $nome,
+                    'email'           => $email,
+                    'foto_perfil'     => $foto_perfil,
+                    'telefone'        => $telefone !== '' ? $telefone : null,
+                    'metodo_contacto' => $metodo_contacto
                 ];
 
                 header("Location: index.php");
@@ -77,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } catch (PDOException $e) {
         $erro = "Erro de conexão: " . $e->getMessage();
+    }
     }
 }
 ?>
@@ -130,7 +162,9 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
 }
 
 .login-box input[type="text"],
-.login-box input[type="password"] {
+.login-box input[type="password"],
+.login-box input[type="tel"],
+.login-box select {
   width: 100%;
   padding: 12px 16px;
   border-radius: 6px;
@@ -142,11 +176,19 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
   box-sizing: border-box;
 }
 
-.login-box input:focus {
+.login-box input:focus,
+.login-box select:focus {
   outline: none;
   border-color: #58b79d;
   background: white;
   box-shadow: 0 0 0 3px rgba(88, 183, 157, 0.1);
+}
+
+.campo-hint {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
 }
 
 /* --- Área de upload de foto --- */
@@ -310,8 +352,27 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
       <!-- Email -->
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="text" id="email" name="email" placeholder="exemplo@email.com" required
+        <input type="text" id="email" name="email" placeholder="exemplo@gmail.com" required
                value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+        <span class="campo-hint">Apenas emails @gmail.com ou @yahoo.com</span>
+      </div>
+
+      <!-- Telefone -->
+      <div class="form-group">
+        <label for="telefone">Número de Telemóvel <span style="color:#999; font-weight:normal;">(opcional)</span></label>
+        <input type="tel" id="telefone" name="telefone" placeholder="912345678"
+               value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>"
+               oninput="atualizarMetodoContacto()">
+      </div>
+
+      <!-- Forma de contacto preferida -->
+      <div class="form-group">
+        <label for="metodo_contacto">Forma de contacto preferida</label>
+        <select id="metodo_contacto" name="metodo_contacto">
+          <option value="email" selected>Email</option>
+          <option value="telefone" id="opcao_telefone" disabled>Telemóvel</option>
+        </select>
+        <span class="campo-hint" id="hint_contacto">Sem telemóvel indicado, só pode escolher o email.</span>
       </div>
 
       <!-- Palavra-passe -->
@@ -347,6 +408,25 @@ function previewFoto(input) {
     reader.readAsDataURL(input.files[0]);
   }
 }
+
+function atualizarMetodoContacto() {
+  const telefone     = document.getElementById('telefone').value.trim();
+  const select       = document.getElementById('metodo_contacto');
+  const opcaoTel      = document.getElementById('opcao_telefone');
+  const hint          = document.getElementById('hint_contacto');
+
+  if (telefone === '') {
+    opcaoTel.disabled = true;
+    select.value = 'email';
+    hint.textContent = 'Sem telemóvel indicado, só pode escolher o email.';
+  } else {
+    opcaoTel.disabled = false;
+    hint.textContent = 'Escolha como prefere ser contactado.';
+  }
+}
+
+// Garantir o estado correto ao carregar (ex: quando há erro de validação e o form é reapresentado)
+document.addEventListener('DOMContentLoaded', atualizarMetodoContacto);
 </script>
 
 </body>
