@@ -199,6 +199,23 @@ if ($utilizador_logado) {
   </div>
 </div>
 
+<!-- ===== AVISO LOGIN/REGISTO ===== -->
+<div id="avisoLogin" class="modal">
+  <div class="modal-content aviso-login-content">
+    <div class="modal-header">
+      <h2>🔐 Sessão necessária</h2>
+      <span class="close" onclick="fecharAvisoLogin()">&times;</span>
+    </div>
+    <div class="modal-body aviso-login-body">
+      <p>Precisa de fazer login ou registar-se para participar em eventos.</p>
+      <div class="aviso-login-botoes">
+        <a href="login.php" class="modal-btn modal-btn-participar">Iniciar Sessão</a>
+        <a href="register.php" class="modal-btn modal-btn-registar">Registar-se</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer>
   <p>© 2025 HumaniCare - Juntos por um futuro melhor 🌿</p>
 </footer>
@@ -421,7 +438,10 @@ function fecharModal(){
 }
 
 function formatarData(d){const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});}
-window.onclick=e=>{if(e.target===document.getElementById('modalEvento'))fecharModal();};
+window.onclick=e=>{
+  if(e.target===document.getElementById('modalEvento'))fecharModal();
+  if(e.target===document.getElementById('avisoLogin'))fecharAvisoLogin();
+};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharModal();});
 
 function toggleParticipar(eid){
@@ -526,7 +546,8 @@ function eliminarComentario(comentarioId,btn){
 }
 
 function htmlEncode(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function redirecionarLogin(){if(confirm('Precisa de login para participar. Ir para login?'))window.location.href='login.php';}
+function redirecionarLogin(){document.getElementById('avisoLogin').style.display='block';}
+function fecharAvisoLogin(){document.getElementById('avisoLogin').style.display='none';}
 </script>
 </body>
 </html>

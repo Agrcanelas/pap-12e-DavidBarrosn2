@@ -124,6 +124,44 @@ if ($utilizador_logado) {
   <div class="card" id="envolva"><div class="card-icon">🌍</div><h3>Envolva-se</h3><p>Crie eventos e participe em atividades para a comunidade e o planeta.</p></div>
 </section>
 
+<section id="eventosProjetos">
+  <h3 class="titulo-eventos">🔥 Eventos</h3>
+  <div class="eventos-grid">
+  <?php if($erro_eventos): ?>
+    <p class="mensagem-centro"><?php echo htmlspecialchars($erro_eventos); ?></p>
+  <?php elseif(empty($eventos)): ?>
+    <p class="mensagem-centro">Ainda não existem eventos. Seja o primeiro!</p>
+  <?php else: ?>
+    <?php
+      usort($eventos, fn($a,$b) => strtotime($b['data_criacao']) - strtotime($a['data_criacao']));
+      foreach($eventos as $ev):
+        $eid      = $ev['evento_id'];
+        $criador  = $utilizador_logado && $_SESSION['user']['utilizador_id'] == $ev['utilizador_id'];
+        $participa= $utilizador_logado && in_array($eid, $participacoes);
+    ?>
+      <div class="evento-card"
+           data-criador="<?php echo $ev['utilizador_id']; ?>"
+           data-evento="<?php echo $eid; ?>"
+           data-participa="<?php echo $participa?'1':'0'; ?>"
+           onclick="abrirModal(<?php echo $eid; ?>)">
+        <?php if(!empty($ev['imagem']) && file_exists('uploads/eventos/'.$ev['imagem'])): ?>
+          <img src="uploads/eventos/<?php echo htmlspecialchars($ev['imagem']); ?>"
+               alt="<?php echo htmlspecialchars($ev['nome']); ?>" class="evento-img">
+        <?php endif; ?>
+        <h4><?php echo htmlspecialchars($ev['nome']); ?></h4>
+        <div class="evento-info">
+          <p><strong>📅 Início:</strong> <?php echo date('d/m/Y',strtotime($ev['data_inicio'])).' às '.substr($ev['hora_inicio'],0,5); ?></p>
+          <p><strong>🏁 Fim:</strong> <?php echo date('d/m/Y',strtotime($ev['data_fim'])).' às '.substr($ev['hora_fim'],0,5); ?></p>
+          <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($ev['local_evento']); ?></p>
+          <p><strong>👥 Participantes:</strong> <?php echo $ev['total_participantes']; ?></p>
+        </div>
+        <?php if($criador): ?><span class="badge criado">Criado por mim</span><?php endif; ?>
+      </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
+  </div>
+</section>
+
 <section id="criar-evento">
 <?php if(!$utilizador_logado): ?>
   <div class="login-prompt"><p>✨ Para criar eventos, faça <a href="login.php">login</a> ou <a href="register.php" style="color:#2563eb;">registe-se</a>.</p></div>
@@ -189,44 +227,6 @@ if ($utilizador_logado) {
     <button type="submit" class="btn-submit" id="btnSubmit">Criar Evento</button>
   </form>
 <?php endif; ?>
-</section>
-
-<section id="eventosProjetos">
-  <h3 class="titulo-eventos">🔥 Eventos</h3>
-  <div class="eventos-grid">
-  <?php if($erro_eventos): ?>
-    <p class="mensagem-centro"><?php echo htmlspecialchars($erro_eventos); ?></p>
-  <?php elseif(empty($eventos)): ?>
-    <p class="mensagem-centro">Ainda não existem eventos. Seja o primeiro!</p>
-  <?php else: ?>
-    <?php
-      usort($eventos, fn($a,$b) => strtotime($b['data_criacao']) - strtotime($a['data_criacao']));
-      foreach($eventos as $ev):
-        $eid      = $ev['evento_id'];
-        $criador  = $utilizador_logado && $_SESSION['user']['utilizador_id'] == $ev['utilizador_id'];
-        $participa= $utilizador_logado && in_array($eid, $participacoes);
-    ?>
-      <div class="evento-card"
-           data-criador="<?php echo $ev['utilizador_id']; ?>"
-           data-evento="<?php echo $eid; ?>"
-           data-participa="<?php echo $participa?'1':'0'; ?>"
-           onclick="abrirModal(<?php echo $eid; ?>)">
-        <?php if(!empty($ev['imagem']) && file_exists('uploads/eventos/'.$ev['imagem'])): ?>
-          <img src="uploads/eventos/<?php echo htmlspecialchars($ev['imagem']); ?>"
-               alt="<?php echo htmlspecialchars($ev['nome']); ?>" class="evento-img">
-        <?php endif; ?>
-        <h4><?php echo htmlspecialchars($ev['nome']); ?></h4>
-        <div class="evento-info">
-          <p><strong>📅 Início:</strong> <?php echo date('d/m/Y',strtotime($ev['data_inicio'])).' às '.substr($ev['hora_inicio'],0,5); ?></p>
-          <p><strong>🏁 Fim:</strong> <?php echo date('d/m/Y',strtotime($ev['data_fim'])).' às '.substr($ev['hora_fim'],0,5); ?></p>
-          <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($ev['local_evento']); ?></p>
-          <p><strong>👥 Participantes:</strong> <?php echo $ev['total_participantes']; ?></p>
-        </div>
-        <?php if($criador): ?><span class="badge criado">Criado por mim</span><?php endif; ?>
-      </div>
-    <?php endforeach; ?>
-  <?php endif; ?>
-  </div>
 </section>
 
 </main>
@@ -297,6 +297,23 @@ if ($utilizador_logado) {
       </div>
     </div>
     <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- ===== AVISO LOGIN/REGISTO ===== -->
+<div id="avisoLogin" class="modal">
+  <div class="modal-content aviso-login-content">
+    <div class="modal-header">
+      <h2>🔐 Sessão necessária</h2>
+      <span class="close" onclick="fecharAvisoLogin()">&times;</span>
+    </div>
+    <div class="modal-body aviso-login-body">
+      <p>Precisa de fazer login ou registar-se para participar em eventos.</p>
+      <div class="aviso-login-botoes">
+        <a href="login.php" class="modal-btn modal-btn-participar">Iniciar Sessão</a>
+        <a href="register.php" class="modal-btn modal-btn-registar">Registar-se</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -415,7 +432,10 @@ function formatarData(d){
   return dt.toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 
-window.onclick=e=>{if(e.target===document.getElementById('modalEvento'))fecharModal();};
+window.onclick=e=>{
+  if(e.target===document.getElementById('modalEvento'))fecharModal();
+  if(e.target===document.getElementById('avisoLogin'))fecharAvisoLogin();
+};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharModal();});
 
 // ===== PARTICIPAR =====
@@ -586,7 +606,10 @@ function htmlEncode(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function redirecionarLogin(){
-  if(confirm('Precisa de login para participar. Ir para login?'))window.location.href='login.php';
+  document.getElementById('avisoLogin').style.display='block';
+}
+function fecharAvisoLogin(){
+  document.getElementById('avisoLogin').style.display='none';
 }
 
 // Validação form
