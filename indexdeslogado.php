@@ -1,12 +1,24 @@
 <?php
 session_start();
 
-// Simulação: utilizador deslogado
-$_SESSION['usuario'] = null;
+if (file_exists('db.php')) { require_once 'db.php'; }
+else { die("Erro: db.php não encontrado!"); }
 
-// Inicializar array de eventos se não existir
-if(!isset($_SESSION['eventos'])) {
-    $_SESSION['eventos'] = [];
+$eventos = [];
+$erro_eventos = null;
+
+try {
+    $stmt = $pdo->query("
+        SELECT e.*, u.nome as criador_nome, u.foto_perfil as criador_foto,
+        u.email as criador_email, u.telefone as criador_telefone, u.metodo_contacto as criador_metodo_contacto,
+        (SELECT COUNT(*) FROM participa WHERE evento_id = e.evento_id) as total_participantes
+        FROM evento e
+        JOIN utilizador u ON e.utilizador_id = u.utilizador_id
+        ORDER BY e.data_criacao DESC
+    ");
+    $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $erro_eventos = "Erro ao carregar eventos.";
 }
 ?>
 <!doctype html>
@@ -22,7 +34,7 @@ if(!isset($_SESSION['eventos'])) {
 <header>
   <div class="header-container">
     <h1 class="logo">HUMANI <span>CARE</span></h1>
-    
+
     <nav class="nav-links">
       <a href="#sobre">Sobre</a>
       <a href="#projeto">Projetos</a>
@@ -36,16 +48,16 @@ if(!isset($_SESSION['eventos'])) {
 </header>
 
 <main class="container">
-  
+
   <section class="banner">
     <div class="banner-text">
       <h2>Junte-se ao movimento!</h2>
-      <p>Participe em atividades práticas de preservação, reflorestamento e educação ambiental. 
-        Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje 
+      <p>Participe em atividades práticas de preservação, reflorestamento e educação ambiental.
+        Com pequenas ações, pode fazer uma grande diferença, ajudando o planeta hoje
         e garantindo um futuro sustentável para as próximas gerações.</p>
       <a href="#envolva" class="btn-cta">Comece Agora</a>
     </div>
-    
+
     <div class="banner-img">
       <div class="slideshow-container">
         <div class="mySlides fade">
@@ -108,44 +120,113 @@ if(!isset($_SESSION['eventos'])) {
     </div>
   </section>
 
+  <section id="eventosProjetos">
+    <h3 class="titulo-eventos">🔥 Eventos</h3>
+    <div class="eventos-grid">
+    <?php if($erro_eventos): ?>
+      <p class="mensagem-centro"><?php echo htmlspecialchars($erro_eventos); ?></p>
+    <?php elseif(empty($eventos)): ?>
+      <p class="mensagem-centro">Ainda não existem eventos. Seja o primeiro a criar um!</p>
+    <?php else: ?>
+      <?php foreach($eventos as $ev): $eid = $ev['evento_id']; ?>
+        <div class="evento-card" data-evento="<?php echo $eid; ?>" onclick="abrirModal(<?php echo $eid; ?>)">
+          <?php if(!empty($ev['imagem']) && file_exists('uploads/eventos/'.$ev['imagem'])): ?>
+            <img src="uploads/eventos/<?php echo htmlspecialchars($ev['imagem']); ?>"
+                 alt="<?php echo htmlspecialchars($ev['nome']); ?>" class="evento-img">
+          <?php endif; ?>
+          <h4><?php echo htmlspecialchars($ev['nome']); ?></h4>
+          <div class="evento-info">
+            <p><strong>📅 Início:</strong> <?php echo date('d/m/Y',strtotime($ev['data_inicio'])).' às '.substr($ev['hora_inicio'],0,5); ?></p>
+            <p><strong>🏁 Fim:</strong> <?php echo date('d/m/Y',strtotime($ev['data_fim'])).' às '.substr($ev['hora_fim'],0,5); ?></p>
+            <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($ev['local_evento']); ?></p>
+            <p><strong>👥 Participantes:</strong> <?php echo $ev['total_participantes']; ?></p>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+    </div>
+  </section>
+
   <section id="criar-evento">
     <div class="login-prompt">
       <p>✨ Para criar eventos, faça <a href="login.php">login</a> ou <a href="register.php" style="color:#2563eb;">registe-se</a>.</p>
     </div>
   </section>
 
-  <section id="eventosProjetos">
-    <h3 class="titulo-eventos">📅 Eventos Criados</h3>
-    
-    <?php if(empty($_SESSION['eventos'])): ?>
-      <p style="grid-column: 1 / -1; text-align: center; color: #777; padding: 40px 20px;">
-        Ainda não existem eventos criados. Seja o primeiro a criar um!
-      </p>
-    <?php else: ?>
-      <?php foreach($_SESSION['eventos'] as $evento): ?>
-        <div class="evento-card">
-          <?php if($evento['imagem']): ?>
-            <img src="<?php echo htmlspecialchars($evento['imagem']); ?>" alt="<?php echo htmlspecialchars($evento['nome']); ?>" class="evento-img">
-          <?php endif; ?>
-          <h4><?php echo htmlspecialchars($evento['nome']); ?></h4>
-          <div class="evento-info">
-            <p><strong>📅 Data:</strong> <?php echo htmlspecialchars($evento['data']); ?></p>
-            <p><strong>📍 Local:</strong> <?php echo htmlspecialchars($evento['local']); ?></p>
-            <p class="evento-desc"><?php echo htmlspecialchars($evento['descricao']); ?></p>
-          </div>
-          <button class="participar-btn">Participar</button>
-        </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
-  </section>
-
 </main>
+
+<!-- ===== MODAL DETALHES DO EVENTO ===== -->
+<div id="modalEvento" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitulo"></h2>
+      <span class="close" onclick="fecharModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
+
+      <div class="modal-criador">
+        <div id="modalCriadorFoto"></div>
+        <div class="modal-criador-info">
+          <small>Organizado por</small>
+          <strong id="modalCriadorNome"></strong>
+          <small id="modalCriadorContacto" class="modal-criador-contacto"></small>
+        </div>
+      </div>
+
+      <div class="modal-info">
+        <div class="modal-info-item">
+          <span class="icon">📅</span><span class="label">Data:</span>
+          <span class="value" id="modalData"></span>
+        </div>
+        <div class="modal-info-item">
+          <span class="icon">📍</span><span class="label">Local:</span>
+          <span class="value" id="modalLocal"></span>
+        </div>
+      </div>
+
+      <div class="participantes-count">
+        <span>👥</span><span id="modalParticipantes"></span>
+      </div>
+
+      <div class="modal-description">
+        <h3>📝 Descrição</h3>
+        <p id="modalDescricao"></p>
+      </div>
+
+      <div class="login-para-comentar">
+        <a href="login.php">Faça login</a> para comentar e participar.
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- ===== AVISO LOGIN/REGISTO ===== -->
+<div id="avisoLogin" class="modal">
+  <div class="modal-content aviso-login-content">
+    <div class="modal-header">
+      <h2>🔐 Sessão necessária</h2>
+      <span class="close" onclick="fecharAvisoLogin()">&times;</span>
+    </div>
+    <div class="modal-body aviso-login-body">
+      <p>Precisa de fazer login ou registar-se para participar em eventos.</p>
+      <div class="aviso-login-botoes">
+        <a href="login.php" class="modal-btn modal-btn-participar">Iniciar Sessão</a>
+        <a href="register.php" class="modal-btn modal-btn-registar">Registar-se</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer>
   <p>© 2025 HumaniCare - Juntos por um futuro melhor 🌿</p>
 </footer>
 
 <script>
+const eventosData = <?php echo json_encode($eventos); ?>;
+let eventoAtual = null;
+
 // ========== CARROSSEL ==========
 let slideIndex = 1;
 showSlides(slideIndex);
@@ -162,18 +243,18 @@ function showSlides(n) {
   let i;
   let slides = document.getElementsByClassName("mySlides");
   let dots = document.getElementsByClassName("dot");
-  
+
   if (n > slides.length) {slideIndex = 1}
   if (n < 1) {slideIndex = slides.length}
-  
+
   for (i = 0; i < slides.length; i++) {
     slides[i].style.display = "none";
   }
-  
+
   for (i = 0; i < dots.length; i++) {
     dots[i].className = dots[i].className.replace(" active", "");
   }
-  
+
   if (slides.length > 0) {
     slides[slideIndex-1].style.display = "block";
     dots[slideIndex-1].className += " active";
@@ -185,13 +266,78 @@ setInterval(function() {
   plusSlides(1);
 }, 4000);
 
-// ========== BOTÃO PARTICIPAR ==========
-document.querySelectorAll('.participar-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    alert('Faça login para participar neste evento!');
-    window.location.href = 'login.php';
-  });
-});
+// ========== MODAL DE DETALHES ==========
+function abrirModal(eid){
+  eventoAtual = eventosData.find(e => e.evento_id == eid);
+  if(!eventoAtual) return;
+
+  document.getElementById('modalTitulo').textContent = eventoAtual.nome;
+  const horaI = eventoAtual.hora_inicio ? eventoAtual.hora_inicio.substring(0,5) : '';
+  const horaF = eventoAtual.hora_fim   ? eventoAtual.hora_fim.substring(0,5)   : '';
+  document.getElementById('modalData').innerHTML =
+    '🗓️ <strong>Início:</strong> ' + formatarData(eventoAtual.data_inicio) + ' às ' + horaI +
+    '<br>🏁 <strong>Fim:</strong> ' + formatarData(eventoAtual.data_fim)   + ' às ' + horaF;
+  document.getElementById('modalLocal').textContent = eventoAtual.local_evento;
+  document.getElementById('modalDescricao').textContent = eventoAtual.descricao;
+
+  const total = parseInt(eventoAtual.total_participantes);
+  document.getElementById('modalParticipantes').textContent = total === 1 ? '1 participante' : total + ' participantes';
+
+  const imgEl = document.getElementById('modalImagem');
+  if(eventoAtual.imagem){ imgEl.src = 'uploads/eventos/' + eventoAtual.imagem; imgEl.style.display='block'; }
+  else imgEl.style.display = 'none';
+
+  const fotoDiv = document.getElementById('modalCriadorFoto');
+  if(eventoAtual.criador_foto){
+    fotoDiv.innerHTML = `<img src="uploads/perfil/${eventoAtual.criador_foto}" class="modal-criador-foto"
+      alt="${htmlEncode(eventoAtual.criador_nome)}"
+      onerror="this.outerHTML='<div class=modal-criador-placeholder>${eventoAtual.criador_nome.charAt(0).toUpperCase()}</div>'">`;
+  } else {
+    fotoDiv.innerHTML = `<div class="modal-criador-placeholder">${eventoAtual.criador_nome.charAt(0).toUpperCase()}</div>`;
+  }
+  document.getElementById('modalCriadorNome').textContent = eventoAtual.criador_nome;
+
+  const contactoEl = document.getElementById('modalCriadorContacto');
+  if (eventoAtual.criador_metodo_contacto === 'telefone' && eventoAtual.criador_telefone) {
+    contactoEl.textContent = '📞 ' + eventoAtual.criador_telefone;
+  } else {
+    contactoEl.textContent = '📧 ' + eventoAtual.criador_email;
+  }
+
+  const footer = document.getElementById('modalFooter');
+  footer.innerHTML = `<button class="modal-btn modal-btn-participar" onclick="redirecionarLogin()">Participar</button>
+    <button class="modal-btn modal-btn-fechar" onclick="fecharModal()">Fechar</button>`;
+
+  document.getElementById('modalEvento').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharModal(){
+  document.getElementById('modalEvento').style.display = 'none';
+  document.body.style.overflow = 'auto';
+  eventoAtual = null;
+}
+
+function formatarData(d){
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('pt-PT', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+function htmlEncode(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function redirecionarLogin(){
+  document.getElementById('avisoLogin').style.display = 'block';
+}
+function fecharAvisoLogin(){
+  document.getElementById('avisoLogin').style.display = 'none';
+}
+
+window.onclick = e => {
+  if(e.target === document.getElementById('modalEvento')) fecharModal();
+  if(e.target === document.getElementById('avisoLogin')) fecharAvisoLogin();
+};
 </script>
 
 </body>
