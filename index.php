@@ -239,36 +239,43 @@ if ($utilizador_logado) {
       <span class="close" onclick="fecharModal()">&times;</span>
     </div>
     <div class="modal-body">
-      <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
-
-      <!-- Criador com foto -->
-      <div class="modal-criador">
-        <div id="modalCriadorFoto"></div>
-        <div class="modal-criador-info">
-          <small>Organizado por</small>
-          <strong id="modalCriadorNome"></strong>
-          <small id="modalCriadorContacto" class="modal-criador-contacto"></small>
+      <div class="modal-top-row">
+        <div class="modal-image-col">
+          <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
+          <div id="modalSemImagem" class="modal-sem-imagem" style="display:none">📅</div>
         </div>
-      </div>
 
-      <div class="modal-info">
-        <div class="modal-info-item">
-          <span class="icon">📅</span><span class="label">Data:</span>
-          <span class="value" id="modalData"></span>
+        <div class="modal-info-col">
+          <!-- Criador com foto -->
+          <div class="modal-criador">
+            <div id="modalCriadorFoto"></div>
+            <div class="modal-criador-info">
+              <small>Organizado por</small>
+              <strong id="modalCriadorNome"></strong>
+              <small id="modalCriadorContacto" class="modal-criador-contacto"></small>
+            </div>
+          </div>
+
+          <div class="modal-info">
+            <div class="modal-info-item">
+              <span class="icon">📅</span><span class="label">Data:</span>
+              <span class="value" id="modalData"></span>
+            </div>
+            <div class="modal-info-item">
+              <span class="icon">📍</span><span class="label">Local:</span>
+              <span class="value" id="modalLocal"></span>
+            </div>
+          </div>
+
+          <div class="participantes-count">
+            <span>👥</span><span id="modalParticipantes"></span>
+          </div>
+
+          <div class="modal-description">
+            <h3>📝 Descrição</h3>
+            <p id="modalDescricao"></p>
+          </div>
         </div>
-        <div class="modal-info-item">
-          <span class="icon">📍</span><span class="label">Local:</span>
-          <span class="value" id="modalLocal"></span>
-        </div>
-      </div>
-
-      <div class="participantes-count">
-        <span>👥</span><span id="modalParticipantes"></span>
-      </div>
-
-      <div class="modal-description">
-        <h3>📝 Descrição</h3>
-        <p id="modalDescricao"></p>
       </div>
 
       <!-- COMENTÁRIOS -->
@@ -372,8 +379,15 @@ function abrirModal(eid){
 
   // Imagem
   const imgEl=document.getElementById('modalImagem');
-  if(eventoAtual.imagem){imgEl.src='uploads/eventos/'+eventoAtual.imagem;imgEl.style.display='block';}
-  else imgEl.style.display='none';
+  const semImgEl=document.getElementById('modalSemImagem');
+  if(eventoAtual.imagem){
+    imgEl.src='uploads/eventos/'+eventoAtual.imagem;
+    imgEl.style.display='block';
+    semImgEl.style.display='none';
+  }else{
+    imgEl.style.display='none';
+    semImgEl.style.display='flex';
+  }
 
   // Criador com foto
   const fotoDiv=document.getElementById('modalCriadorFoto');
