@@ -52,31 +52,43 @@ if ($utilizador_logado) {
   <div class="header-container">
     <h1 class="logo">HUMANI <span>CARE</span></h1>
 
-    <?php if($utilizador_logado): ?>
-      <?php $u = $_SESSION['user']; ?>
-      <a href="perfil.php" class="usuario-logado" title="O meu perfil">
-        <?php if(!empty($u['foto_perfil']) && file_exists('uploads/perfil/'.$u['foto_perfil'])): ?>
-          <img src="uploads/perfil/<?php echo htmlspecialchars($u['foto_perfil']); ?>" class="user-foto-mini" alt="Foto">
-        <?php else: ?>
-          <div class="user-placeholder-mini"><?php echo strtoupper(substr($u['nome'],0,1)); ?></div>
+    <div class="header-bottom-row">
+      <div class="header-left">
+        <?php if($utilizador_logado): ?>
+          <?php $u = $_SESSION['user']; ?>
+          <div class="perfil-dropdown" id="perfilDropdown">
+            <button type="button" class="usuario-logado" onclick="togglePerfilDropdown()" title="<?php echo htmlspecialchars($u['nome']); ?>">
+              <?php if(!empty($u['foto_perfil']) && file_exists('uploads/perfil/'.$u['foto_perfil'])): ?>
+                <img src="uploads/perfil/<?php echo htmlspecialchars($u['foto_perfil']); ?>" class="user-foto-mini" alt="Foto">
+              <?php else: ?>
+                <div class="user-placeholder-mini"><?php echo strtoupper(substr($u['nome'],0,1)); ?></div>
+              <?php endif; ?>
+            </button>
+            <div class="perfil-dropdown-menu" id="perfilDropdownMenu">
+              <a href="perfil.php">⚙️ Definições</a>
+              <a href="logout.php">🚪 Terminar Sessão</a>
+            </div>
+          </div>
         <?php endif; ?>
-        <?php echo htmlspecialchars($u['nome']); ?>
-      </a>
-    <?php endif; ?>
+      </div>
 
-    <nav class="nav-links">
-      <a href="#banner">Sobre</a>
-      <a href="#projeto">Projetos</a>
-      <a href="#doacoes">Doações</a>
-      <a href="#envolva">Envolva-se</a>
-      <a href="#criar-evento">Criar Evento</a>
-      <a href="eventos.php">Eventos</a>
-      <?php if($utilizador_logado): ?>
-        <a href="logout.php" class="btn-sair">Sair</a>
-      <?php else: ?>
-        <a href="login.php" class="btn-login">Login</a>
-      <?php endif; ?>
-    </nav>
+      <nav class="nav-links">
+        <a href="#banner">Sobre</a>
+        <a href="#projeto">Projetos</a>
+        <a href="#doacoes">Doações</a>
+        <a href="#envolva">Envolva-se</a>
+        <a href="#criar-evento">Criar Evento</a>
+        <a href="eventos.php">Eventos</a>
+      </nav>
+
+      <div class="header-right">
+        <?php if($utilizador_logado): ?>
+          <a href="logout.php" class="btn-sair">Sair</a>
+        <?php else: ?>
+          <a href="login.php" class="btn-login">Login</a>
+        <?php endif; ?>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -362,6 +374,19 @@ const userFotoUrl = null, userInicial = '', userNome = '';
 </script>
 
 <script>
+function togglePerfilDropdown(){
+  document.getElementById('perfilDropdownMenu').classList.toggle('aberto');
+}
+document.addEventListener('click', function(e){
+  const dd = document.getElementById('perfilDropdown');
+  if (dd && !dd.contains(e.target)) {
+    const menu = document.getElementById('perfilDropdownMenu');
+    if (menu) menu.classList.remove('aberto');
+  }
+});
+</script>
+
+<script>
 // Carrossel
 let slideIndex=1; showSlides(slideIndex);
 function plusSlides(n){showSlides(slideIndex+=n);}
@@ -592,14 +617,19 @@ function renderComentarios(lista_c){
     lista.innerHTML='<p class="sem-comentarios">Ainda não há comentários. Seja o primeiro! 💬</p>';
     return;
   }
-  lista.innerHTML=lista_c.map(c=>`
-    <div class="comentario-item" data-comentario-id="${c.comentario_id}">
+  lista.innerHTML=lista_c.map(c=>{
+    const ehMeu = utilizadorLogado && parseInt(c.utilizador_id) === utilizadorId;
+    return `
+    <div class="comentario-item${ehMeu?' comentario-meu':''}" data-comentario-id="${c.comentario_id}">
       ${c.foto_url
         ?`<img src="${c.foto_url}" class="comentario-foto" alt="${htmlEncode(c.nome)}" onerror="this.outerHTML='<div class=comentario-placeholder>${c.inicial}</div>'">`
         :`<div class="comentario-placeholder">${c.inicial}</div>`}
       <div class="comentario-balao">
         <div class="comentario-header">
-          <a href="ver_perfil.php?id=${c.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(c.nome)}</a>
+          <span>
+            <a href="ver_perfil.php?id=${c.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(c.nome)}</a>
+            ${c.e_organizador ? '<span class="badge-organizador">Organizador</span>' : ''}
+          </span>
           ${c.pode_eliminar
             ?`<button class="btn-eliminar-comentario" onclick="eliminarComentario(${c.comentario_id}, this)" title="Eliminar comentário">🗑️</button>`
             :''}
@@ -607,7 +637,7 @@ function renderComentarios(lista_c){
         <div class="comentario-texto">${htmlEncode(c.texto)}</div>
         <div class="comentario-data">${c.data_formatada}</div>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 
 function enviarComentario(){
@@ -629,13 +659,16 @@ function enviarComentario(){
       const semMsg=lista.querySelector('.sem-comentarios');
       if(semMsg)semMsg.remove();
       const novoHtml=`
-        <div class="comentario-item" data-comentario-id="${data.comentario_id}">
+        <div class="comentario-item comentario-meu" data-comentario-id="${data.comentario_id}">
           ${data.foto_url
             ?`<img src="${data.foto_url}" class="comentario-foto" onerror="this.outerHTML='<div class=comentario-placeholder>${data.inicial}</div>'">`
             :`<div class="comentario-placeholder">${data.inicial}</div>`}
           <div class="comentario-balao">
             <div class="comentario-header">
-              <a href="ver_perfil.php?id=${data.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(data.nome)}</a>
+              <span>
+                <a href="ver_perfil.php?id=${data.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(data.nome)}</a>
+                ${data.e_organizador ? '<span class="badge-organizador">Organizador</span>' : ''}
+              </span>
               <button class="btn-eliminar-comentario" onclick="eliminarComentario(${data.comentario_id}, this)" title="Eliminar comentário">🗑️</button>
             </div>
             <div class="comentario-texto">${htmlEncode(data.texto)}</div>

@@ -126,6 +126,51 @@ a.usuario-logado:hover {
   box-shadow: 0 2px 6px rgba(192,57,43,0.3);
 }
 
+/* ---------- LINHA INFERIOR DO HEADER: avatar | nav | sair ---------- */
+.header-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.header-left, .header-right {
+  flex: 0 0 auto;
+  min-width: 100px;
+  display: flex;
+}
+
+.header-left { justify-content: flex-start; }
+.header-right { justify-content: flex-end; }
+
+.header-bottom-row .nav-links { flex: 1; }
+
+/* ---------- DROPDOWN DO PERFIL (avatar no header) ---------- */
+.perfil-dropdown { position: relative; }
+
+.perfil-dropdown .usuario-logado {
+  border: none; cursor: pointer; font-family: inherit;
+}
+
+.perfil-dropdown-menu {
+  display: none; position: absolute; top: calc(100% + 8px); left: 0;
+  background: white; border: 2px solid #c8c0ae; border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18); overflow: hidden;
+  min-width: 190px; z-index: 200;
+}
+
+.perfil-dropdown-menu.aberto { display: block; }
+
+.perfil-dropdown-menu a {
+  display: block; padding: 12px 18px; text-decoration: none;
+  color: #4a4a4a; font-size: 14px; font-weight: 600; transition: background .2s;
+}
+
+.perfil-dropdown-menu a:hover { background: #f0faf7; color: #3a7a62; }
+
+.perfil-dropdown-menu a + a { border-top: 1px solid #eee; }
+
 /* ---------- BANNER ---------- */
 .banner {
   display: flex;
@@ -754,6 +799,16 @@ a.usuario-logado:hover {
 .sem-comentarios  { color: #bbb; font-size: 14px; text-align: center; padding: 14px; }
 
 .comentario-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+
+/* ---------- COMENTÁRIO PRÓPRIO: foto e balão à direita ---------- */
+.comentario-item.comentario-meu { flex-direction: row-reverse; }
+.comentario-item.comentario-meu .comentario-balao { border-radius: 10px 0 10px 10px; text-align: right; }
+.comentario-item.comentario-meu .comentario-header { justify-content: flex-end; }
+
+.badge-organizador {
+  color: #2563eb; font-weight: bold; font-size: 11px;
+  background: #eaf1ff; padding: 2px 8px; border-radius: 10px; margin-left: 6px;
+}
 
 .comentario-form { display: flex; gap: 9px; align-items: flex-start; }
 

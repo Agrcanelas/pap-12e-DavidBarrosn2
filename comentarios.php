@@ -59,6 +59,8 @@ if ($acao === 'buscar') {
                 intval($c['utilizador_id']) === $utilizador_logado_id ||
                 $criador_evento_id === $utilizador_logado_id
             );
+            // O autor deste comentário é o organizador do evento?
+            $c['e_organizador']  = $criador_evento_id === intval($c['utilizador_id']);
         }
 
         echo json_encode(['comentarios' => $comentarios]);
@@ -112,6 +114,12 @@ if ($acao === 'guardar') {
         $u        = $_SESSION['user'];
         $foto_url = !empty($u['foto_perfil']) ? 'uploads/perfil/' . $u['foto_perfil'] : null;
 
+        // Verificar se quem comentou é o criador do evento
+        $stmtEv = $pdo->prepare("SELECT utilizador_id FROM evento WHERE evento_id = :eid");
+        $stmtEv->execute([':eid' => $evento_id]);
+        $criador_evento_id = intval($stmtEv->fetchColumn());
+        $e_organizador = $criador_evento_id === intval($utilizador_id);
+
         echo json_encode([
             'sucesso'        => true,
             'comentario_id'  => $pdo->lastInsertId(),
@@ -121,7 +129,8 @@ if ($acao === 'guardar') {
             'inicial'        => strtoupper(substr($u['nome'], 0, 1)),
             'data_formatada' => date('d/m/Y H:i'),
             'utilizador_id'  => $utilizador_id,
-            'pode_eliminar'  => true
+            'pode_eliminar'  => true,
+            'e_organizador'  => $e_organizador
         ]);
     } catch (PDOException $e) {
         echo json_encode(['erro' => 'Erro ao guardar comentario.']);

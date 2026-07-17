@@ -46,32 +46,59 @@ if ($utilizador_logado) {
 <header>
   <div class="header-container">
     <h1 class="logo">HUMANI <span>CARE</span></h1>
-    <?php if($utilizador_logado): ?>
-      <?php $u = $_SESSION['user']; ?>
-      <a href="perfil.php" class="usuario-logado" title="O meu perfil">
-        <?php if(!empty($u['foto_perfil']) && file_exists('uploads/perfil/'.$u['foto_perfil'])): ?>
-          <img src="uploads/perfil/<?php echo htmlspecialchars($u['foto_perfil']); ?>" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #58b79d;" alt="Foto">
-        <?php else: ?>
-          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#58b79d,#7a8c3c);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:13px;"><?php echo strtoupper(substr($u['nome'],0,1)); ?></div>
+
+    <div class="header-bottom-row">
+      <div class="header-left">
+        <?php if($utilizador_logado): ?>
+          <?php $u = $_SESSION['user']; ?>
+          <div class="perfil-dropdown" id="perfilDropdown">
+            <button type="button" class="usuario-logado" onclick="togglePerfilDropdown()" title="<?php echo htmlspecialchars($u['nome']); ?>">
+              <?php if(!empty($u['foto_perfil']) && file_exists('uploads/perfil/'.$u['foto_perfil'])): ?>
+                <img src="uploads/perfil/<?php echo htmlspecialchars($u['foto_perfil']); ?>" class="user-foto-mini" alt="Foto">
+              <?php else: ?>
+                <div class="user-placeholder-mini"><?php echo strtoupper(substr($u['nome'],0,1)); ?></div>
+              <?php endif; ?>
+            </button>
+            <div class="perfil-dropdown-menu" id="perfilDropdownMenu">
+              <a href="perfil.php">⚙️ Definições</a>
+              <a href="logout.php">🚪 Terminar Sessão</a>
+            </div>
+          </div>
         <?php endif; ?>
-        <?php echo htmlspecialchars($u['nome']); ?>
-      </a>
-    <?php endif; ?>
-    <nav class="nav-links">
-      <a href="index.php#banner">Sobre</a>
-      <a href="index.php#projeto">Projetos</a>
-      <a href="index.php#doacoes">Doações</a>
-      <a href="index.php#envolva">Envolva-se</a>
-      <a href="index.php#criar-evento">Criar Evento</a>
-      <a href="eventos.php" class="btn-login">Eventos</a>
-      <?php if($utilizador_logado): ?>
-        <a href="logout.php" class="btn-sair">Sair</a>
-      <?php else: ?>
-        <a href="login.php" class="btn-login">Login</a>
-      <?php endif; ?>
-    </nav>
+      </div>
+
+      <nav class="nav-links">
+        <a href="index.php#banner">Sobre</a>
+        <a href="index.php#projeto">Projetos</a>
+        <a href="index.php#doacoes">Doações</a>
+        <a href="index.php#envolva">Envolva-se</a>
+        <a href="index.php#criar-evento">Criar Evento</a>
+        <a href="eventos.php" class="btn-login">Eventos</a>
+      </nav>
+
+      <div class="header-right">
+        <?php if($utilizador_logado): ?>
+          <a href="logout.php" class="btn-sair">Sair</a>
+        <?php else: ?>
+          <a href="login.php" class="btn-login">Login</a>
+        <?php endif; ?>
+      </div>
+    </div>
   </div>
 </header>
+
+<script>
+function togglePerfilDropdown(){
+  document.getElementById('perfilDropdownMenu').classList.toggle('aberto');
+}
+document.addEventListener('click', function(e){
+  const dd = document.getElementById('perfilDropdown');
+  if (dd && !dd.contains(e.target)) {
+    const menu = document.getElementById('perfilDropdownMenu');
+    if (menu) menu.classList.remove('aberto');
+  }
+});
+</script>
 
 <div class="eventos-page">
   <a href="index.php" class="btn-voltar-home">← Voltar à página principal</a>
@@ -646,18 +673,23 @@ function carregarComentarios(eid){
 function renderComentarios(lista_c){
   const lista=document.getElementById('comentariosLista');
   if(!lista_c||lista_c.length===0){lista.innerHTML='<p class="sem-comentarios">Ainda não há comentários. Seja o primeiro! 💬</p>';return;}
-  lista.innerHTML=lista_c.map(c=>`
-    <div class="comentario-item" data-comentario-id="${c.comentario_id}">
+  lista.innerHTML=lista_c.map(c=>{
+    const ehMeu = utilizadorLogado && parseInt(c.utilizador_id) === utilizadorId;
+    return `
+    <div class="comentario-item${ehMeu?' comentario-meu':''}" data-comentario-id="${c.comentario_id}">
       ${c.foto_url?`<img src="${c.foto_url}" class="comentario-foto" onerror="this.outerHTML='<div class=comentario-placeholder>${c.inicial}</div>'">`:`<div class="comentario-placeholder">${c.inicial}</div>`}
       <div class="comentario-balao">
         <div class="comentario-header">
-          <a href="ver_perfil.php?id=${c.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(c.nome)}</a>
+          <span>
+            <a href="ver_perfil.php?id=${c.utilizador_id}" class="comentario-autor" onclick="event.stopPropagation()">${htmlEncode(c.nome)}</a>
+            ${c.e_organizador ? '<span class="badge-organizador">Organizador</span>' : ''}
+          </span>
           ${c.pode_eliminar?`<button class="btn-eliminar-comentario" onclick="eliminarComentario(${c.comentario_id},this)" title="Eliminar">🗑️</button>`:''}
         </div>
         <div class="comentario-texto">${htmlEncode(c.texto)}</div>
         <div class="comentario-data">${c.data_formatada}</div>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 
 function enviarComentario(){
@@ -673,10 +705,11 @@ function enviarComentario(){
       if(data.erro){alert(data.erro);btn.disabled=false;btn.textContent='Enviar';return;}
       const lista=document.getElementById('comentariosLista');
       const semMsg=lista.querySelector('.sem-comentarios');if(semMsg)semMsg.remove();
-      lista.insertAdjacentHTML('beforeend',`<div class="comentario-item" data-comentario-id="${data.comentario_id}">
+      lista.insertAdjacentHTML('beforeend',`<div class="comentario-item comentario-meu" data-comentario-id="${data.comentario_id}">
         ${data.foto_url?`<img src="${data.foto_url}" class="comentario-foto">`:`<div class="comentario-placeholder">${data.inicial}</div>`}
         <div class="comentario-balao">
-          <div class="comentario-header"><a href="ver_perfil.php?id=${data.utilizador_id}" class="comentario-autor">${htmlEncode(data.nome)}</a>
+          <div class="comentario-header"><span><a href="ver_perfil.php?id=${data.utilizador_id}" class="comentario-autor">${htmlEncode(data.nome)}</a>
+          ${data.e_organizador ? '<span class="badge-organizador">Organizador</span>' : ''}</span>
           <button class="btn-eliminar-comentario" onclick="eliminarComentario(${data.comentario_id},this)">🗑️</button></div>
           <div class="comentario-texto">${htmlEncode(data.texto)}</div>
           <div class="comentario-data">${data.data_formatada}</div>
