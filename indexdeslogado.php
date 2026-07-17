@@ -36,7 +36,7 @@ try {
     <h1 class="logo">HUMANI <span>CARE</span></h1>
 
     <nav class="nav-links">
-      <a href="#sobre">Sobre</a>
+      <a href="#banner">Sobre</a>
       <a href="#projeto">Projetos</a>
       <a href="#doacoes">Doações</a>
       <a href="#envolva">Envolva-se</a>
@@ -49,7 +49,7 @@ try {
 
 <main class="container">
 
-  <section class="banner">
+  <section class="banner" id="banner">
     <div class="banner-text">
       <h2>Junte-se ao movimento!</h2>
       <p>Participe em atividades práticas de preservação, reflorestamento e educação ambiental.
@@ -165,8 +165,13 @@ try {
     <div class="modal-body">
       <div class="modal-top-row">
         <div class="modal-image-col">
-          <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
-          <div id="modalSemImagem" class="modal-sem-imagem" style="display:none">📅</div>
+          <div class="modal-imagem-wrapper">
+            <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
+            <div id="modalSemImagem" class="modal-sem-imagem" style="display:none">📅</div>
+            <button type="button" class="modal-img-nav prev" id="modalImgPrev" onclick="modalImgMudar(-1)" style="display:none">❮</button>
+            <button type="button" class="modal-img-nav next" id="modalImgNext" onclick="modalImgMudar(1)" style="display:none">❯</button>
+          </div>
+          <div class="modal-img-dots" id="modalImgDots"></div>
         </div>
         <div class="modal-info-col">
           <div class="modal-criador">
@@ -178,9 +183,12 @@ try {
             </div>
           </div>
 
+          <div class="modal-description">
+            <p id="modalDescricao"></p>
+          </div>
+
           <div class="modal-info">
             <div class="modal-info-item">
-              <span class="icon">📅</span><span class="label">Data:</span>
               <span class="value" id="modalData"></span>
             </div>
             <div class="modal-info-item">
@@ -191,11 +199,6 @@ try {
 
           <div class="participantes-count">
             <span>👥</span><span id="modalParticipantes"></span>
-          </div>
-
-          <div class="modal-description">
-            <h3>📝 Descrição</h3>
-            <p id="modalDescricao"></p>
           </div>
         </div>
       </div>
@@ -272,6 +275,66 @@ setInterval(function() {
   plusSlides(1);
 }, 4000);
 
+// ========== CARROSSEL DE IMAGENS DO MODAL ==========
+let modalImagens = [];
+let modalImgIndex = 0;
+
+function montarImagensModal(evento){
+  let imagens = [];
+  if(evento.imagem) imagens.push(evento.imagem);
+  if(evento.imagens_extras){
+    try{
+      const extras = typeof evento.imagens_extras === 'string' ? JSON.parse(evento.imagens_extras) : evento.imagens_extras;
+      if(Array.isArray(extras)) imagens = imagens.concat(extras);
+    }catch(e){}
+  }
+  modalImagens = imagens.slice(0,5);
+  modalImgIndex = 0;
+  atualizarImagemModal();
+}
+
+function atualizarImagemModal(){
+  const imgEl    = document.getElementById('modalImagem');
+  const semImgEl = document.getElementById('modalSemImagem');
+  const prevBtn  = document.getElementById('modalImgPrev');
+  const nextBtn  = document.getElementById('modalImgNext');
+  const dotsEl   = document.getElementById('modalImgDots');
+
+  if(modalImagens.length===0){
+    imgEl.style.display='none';
+    semImgEl.style.display='flex';
+    prevBtn.style.display='none';
+    nextBtn.style.display='none';
+    dotsEl.innerHTML='';
+    return;
+  }
+
+  semImgEl.style.display='none';
+  imgEl.style.display='block';
+  imgEl.src='uploads/eventos/'+modalImagens[modalImgIndex];
+
+  const temVarias = modalImagens.length>1;
+  prevBtn.style.display = temVarias?'flex':'none';
+  nextBtn.style.display = temVarias?'flex':'none';
+
+  dotsEl.innerHTML='';
+  if(temVarias){
+    modalImagens.forEach((_,i)=>{
+      const dot=document.createElement('button');
+      dot.type='button';
+      dot.className='modal-img-dot'+(i===modalImgIndex?' ativo':'');
+      dot.onclick=()=>{modalImgIndex=i;atualizarImagemModal();};
+      dotsEl.appendChild(dot);
+    });
+  }
+}
+
+function modalImgMudar(delta){
+  if(modalImagens.length===0)return;
+  modalImgIndex=(modalImgIndex+delta+modalImagens.length)%modalImagens.length;
+  atualizarImagemModal();
+}
+
 // ========== MODAL DE DETALHES ==========
 function abrirModal(eid){
   eventoAtual = eventosData.find(e => e.evento_id == eid);
@@ -289,16 +352,8 @@ function abrirModal(eid){
   const total = parseInt(eventoAtual.total_participantes);
   document.getElementById('modalParticipantes').textContent = total === 1 ? '1 participante' : total + ' participantes';
 
-  const imgEl = document.getElementById('modalImagem');
-  const semImgEl = document.getElementById('modalSemImagem');
-  if(eventoAtual.imagem){
-    imgEl.src = 'uploads/eventos/' + eventoAtual.imagem;
-    imgEl.style.display='block';
-    semImgEl.style.display='none';
-  } else {
-    imgEl.style.display = 'none';
-    semImgEl.style.display='flex';
-  }
+  // Imagens (capa + extras) — carrossel
+  montarImagensModal(eventoAtual);
 
   const fotoDiv = document.getElementById('modalCriadorFoto');
   if(eventoAtual.criador_foto){

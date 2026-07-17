@@ -7,6 +7,12 @@ else { die("Erro: db.php não encontrado!"); }
 $eventos = [];
 $erro_eventos = null;
 
+$distritos_portugal = [
+    'Aveiro', 'Beja', 'Braga', 'Bragança', 'Castelo Branco', 'Coimbra',
+    'Évora', 'Faro', 'Guarda', 'Leiria', 'Lisboa', 'Portalegre',
+    'Porto', 'Santarém', 'Setúbal', 'Viana do Castelo', 'Vila Real', 'Viseu'
+];
+
 try {
     $stmt = $pdo->query("
         SELECT e.*, u.nome as criador_nome, u.foto_perfil as criador_foto,
@@ -14,7 +20,8 @@ try {
         (SELECT COUNT(*) FROM participa WHERE evento_id = e.evento_id) as total_participantes
         FROM evento e
         JOIN utilizador u ON e.utilizador_id = u.utilizador_id
-        ORDER BY e.data_criacao DESC
+        ORDER BY total_participantes DESC, e.data_criacao DESC
+        LIMIT 6
     ");
     $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -58,7 +65,7 @@ if ($utilizador_logado) {
     <?php endif; ?>
 
     <nav class="nav-links">
-      <a href="#sobre">Sobre</a>
+      <a href="#banner">Sobre</a>
       <a href="#projeto">Projetos</a>
       <a href="#doacoes">Doações</a>
       <a href="#envolva">Envolva-se</a>
@@ -75,7 +82,7 @@ if ($utilizador_logado) {
 
 <main class="container">
 
-<section class="banner">
+<section class="banner" id="banner">
   <div class="banner-text">
     <h2>Junte-se ao movimento!</h2>
     <p>Participe em atividades práticas de preservação, reflorestamento e educação ambiental.
@@ -125,16 +132,14 @@ if ($utilizador_logado) {
 </section>
 
 <section id="eventosProjetos">
-  <h3 class="titulo-eventos">🔥 Eventos</h3>
+  <h3 class="titulo-eventos">🔥 Eventos com Mais Participantes</h3>
   <div class="eventos-grid">
   <?php if($erro_eventos): ?>
     <p class="mensagem-centro"><?php echo htmlspecialchars($erro_eventos); ?></p>
   <?php elseif(empty($eventos)): ?>
     <p class="mensagem-centro">Ainda não existem eventos. Seja o primeiro!</p>
   <?php else: ?>
-    <?php
-      usort($eventos, fn($a,$b) => strtotime($b['data_criacao']) - strtotime($a['data_criacao']));
-      foreach($eventos as $ev):
+    <?php foreach($eventos as $ev):
         $eid      = $ev['evento_id'];
         $criador  = $utilizador_logado && $_SESSION['user']['utilizador_id'] == $ev['utilizador_id'];
         $participa= $utilizador_logado && in_array($eid, $participacoes);
@@ -160,6 +165,11 @@ if ($utilizador_logado) {
     <?php endforeach; ?>
   <?php endif; ?>
   </div>
+  <?php if(!empty($eventos)): ?>
+    <div class="ver-mais-container">
+      <a href="eventos.php" class="btn-ver-mais">Ver Mais Eventos →</a>
+    </div>
+  <?php endif; ?>
 </section>
 
 <section id="criar-evento">
@@ -176,6 +186,7 @@ if ($utilizador_logado) {
         case 'tipo_imagem':   echo 'Tipo de imagem inválido.'; break;
         case 'tamanho_imagem':echo 'Imagem demasiado grande (máx 5MB).'; break;
         case 'datas_invalidas':echo 'A data/hora de fim não pode ser antes do início.'; break;
+        case 'distrito_invalido':echo 'Selecione um distrito válido.'; break;
         case 'bd':
           echo 'Erro na base de dados.';
           if (!empty($_GET['detalhe'])) {
@@ -216,8 +227,13 @@ if ($utilizador_logado) {
       </div>
     </div>
     <div class="form-group">
-      <label for="local">Local *</label>
-      <input type="text" id="local" name="local" placeholder="Ex: Porto" required maxlength="200">
+      <label for="local">Distrito *</label>
+      <select id="local" name="local" required>
+        <option value="">Selecione o distrito</option>
+        <?php foreach($distritos_portugal as $distrito): ?>
+          <option value="<?php echo htmlspecialchars($distrito); ?>"><?php echo htmlspecialchars($distrito); ?></option>
+        <?php endforeach; ?>
+      </select>
     </div>
     <div class="form-group">
       <label>Imagens (opcional · máx 5 fotos · 5MB cada · <strong>1ª foto = capa</strong>)</label>
@@ -241,8 +257,13 @@ if ($utilizador_logado) {
     <div class="modal-body">
       <div class="modal-top-row">
         <div class="modal-image-col">
-          <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
-          <div id="modalSemImagem" class="modal-sem-imagem" style="display:none">📅</div>
+          <div class="modal-imagem-wrapper">
+            <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
+            <div id="modalSemImagem" class="modal-sem-imagem" style="display:none">📅</div>
+            <button type="button" class="modal-img-nav prev" id="modalImgPrev" onclick="modalImgMudar(-1)" style="display:none">❮</button>
+            <button type="button" class="modal-img-nav next" id="modalImgNext" onclick="modalImgMudar(1)" style="display:none">❯</button>
+          </div>
+          <div class="modal-img-dots" id="modalImgDots"></div>
         </div>
 
         <div class="modal-info-col">
@@ -256,9 +277,12 @@ if ($utilizador_logado) {
             </div>
           </div>
 
+          <div class="modal-description">
+            <p id="modalDescricao"></p>
+          </div>
+
           <div class="modal-info">
             <div class="modal-info-item">
-              <span class="icon">📅</span><span class="label">Data:</span>
               <span class="value" id="modalData"></span>
             </div>
             <div class="modal-info-item">
@@ -269,11 +293,6 @@ if ($utilizador_logado) {
 
           <div class="participantes-count">
             <span>👥</span><span id="modalParticipantes"></span>
-          </div>
-
-          <div class="modal-description">
-            <h3>📝 Descrição</h3>
-            <p id="modalDescricao"></p>
           </div>
         </div>
       </div>
@@ -360,6 +379,64 @@ setInterval(()=>plusSlides(1),4000);
 
 // ===== MODAL =====
 let eventoAtual=null;
+let modalImagens=[];
+let modalImgIndex=0;
+
+function montarImagensModal(evento){
+  let imagens=[];
+  if(evento.imagem) imagens.push(evento.imagem);
+  if(evento.imagens_extras){
+    try{
+      const extras = typeof evento.imagens_extras === 'string' ? JSON.parse(evento.imagens_extras) : evento.imagens_extras;
+      if(Array.isArray(extras)) imagens = imagens.concat(extras);
+    }catch(e){}
+  }
+  modalImagens = imagens.slice(0,5);
+  modalImgIndex = 0;
+  atualizarImagemModal();
+}
+
+function atualizarImagemModal(){
+  const imgEl    = document.getElementById('modalImagem');
+  const semImgEl = document.getElementById('modalSemImagem');
+  const prevBtn  = document.getElementById('modalImgPrev');
+  const nextBtn  = document.getElementById('modalImgNext');
+  const dotsEl   = document.getElementById('modalImgDots');
+
+  if(modalImagens.length===0){
+    imgEl.style.display='none';
+    semImgEl.style.display='flex';
+    prevBtn.style.display='none';
+    nextBtn.style.display='none';
+    dotsEl.innerHTML='';
+    return;
+  }
+
+  semImgEl.style.display='none';
+  imgEl.style.display='block';
+  imgEl.src='uploads/eventos/'+modalImagens[modalImgIndex];
+
+  const temVarias = modalImagens.length>1;
+  prevBtn.style.display = temVarias?'flex':'none';
+  nextBtn.style.display = temVarias?'flex':'none';
+
+  dotsEl.innerHTML='';
+  if(temVarias){
+    modalImagens.forEach((_,i)=>{
+      const dot=document.createElement('button');
+      dot.type='button';
+      dot.className='modal-img-dot'+(i===modalImgIndex?' ativo':'');
+      dot.onclick=()=>{modalImgIndex=i;atualizarImagemModal();};
+      dotsEl.appendChild(dot);
+    });
+  }
+}
+
+function modalImgMudar(delta){
+  if(modalImagens.length===0)return;
+  modalImgIndex=(modalImgIndex+delta+modalImagens.length)%modalImagens.length;
+  atualizarImagemModal();
+}
 
 function abrirModal(eid){
   eventoAtual=eventosData.find(e=>e.evento_id==eid);
@@ -377,17 +454,8 @@ function abrirModal(eid){
   const total=parseInt(eventoAtual.total_participantes);
   document.getElementById('modalParticipantes').textContent=total===1?'1 participante':total+' participantes';
 
-  // Imagem
-  const imgEl=document.getElementById('modalImagem');
-  const semImgEl=document.getElementById('modalSemImagem');
-  if(eventoAtual.imagem){
-    imgEl.src='uploads/eventos/'+eventoAtual.imagem;
-    imgEl.style.display='block';
-    semImgEl.style.display='none';
-  }else{
-    imgEl.style.display='none';
-    semImgEl.style.display='flex';
-  }
+  // Imagens (capa + extras) — carrossel
+  montarImagensModal(eventoAtual);
 
   // Criador com foto
   const fotoDiv=document.getElementById('modalCriadorFoto');

@@ -18,7 +18,7 @@
     <?php endif; ?>
     
     <div class="nav-links">
-      <a href="#sobre">Sobre</a>
+      <a href="index.php#banner">Sobre</a>
       <a href="#projeto">Projetos</a>
       <a href="#doacoes">Doações</a>
       <a href="#envolva">Envolva-se</a>

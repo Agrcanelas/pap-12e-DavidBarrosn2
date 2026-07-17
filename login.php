@@ -180,7 +180,7 @@ body {
   <div class="header-container">
     <nav class="nav-links">
       <a href="indexdeslogado.php">Página principal</a>
-      <a href="indexdeslogado.php#sobre">Sobre</a>
+      <a href="indexdeslogado.php#banner">Sobre</a>
       <a href="indexdeslogado.php#projeto">Projetos</a>
       <a href="indexdeslogado.php#doacoes">Doações</a>
       <a href="indexdeslogado.php#envolva">Envolva-se</a>

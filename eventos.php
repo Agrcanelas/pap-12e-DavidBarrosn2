@@ -5,6 +5,12 @@ require_once 'db.php';
 $utilizador_logado = isset($_SESSION['user']);
 $participacoes = [];
 
+$distritos_portugal = [
+    'Aveiro', 'Beja', 'Braga', 'Bragança', 'Castelo Branco', 'Coimbra',
+    'Évora', 'Faro', 'Guarda', 'Leiria', 'Lisboa', 'Portalegre',
+    'Porto', 'Santarém', 'Setúbal', 'Viana do Castelo', 'Vila Real', 'Viseu'
+];
+
 try {
     $stmt = $pdo->query("
         SELECT e.*, u.nome as criador_nome, u.foto_perfil as criador_foto,
@@ -52,7 +58,7 @@ if ($utilizador_logado) {
       </a>
     <?php endif; ?>
     <nav class="nav-links">
-      <a href="index.php#sobre">Sobre</a>
+      <a href="index.php#banner">Sobre</a>
       <a href="index.php#projeto">Projetos</a>
       <a href="index.php#doacoes">Doações</a>
       <a href="index.php#envolva">Envolva-se</a>
@@ -76,15 +82,30 @@ if ($utilizador_logado) {
   </div>
 
   <!-- Filtros -->
-  <div class="filtros-bar">
-    <span class="filtros-label">Filtrar:</span>
-    <button class="filtro-btn ativo" data-filtro="todos" onclick="setFiltro(this,'todos')">Todos</button>
+  <div class="filtros-bar filtros-bar-unica">
+    <button class="filtro-btn ativo" data-filtro="todos" onclick="toggleFiltroTodos()">Todos</button>
     <?php if($utilizador_logado): ?>
-    <button class="filtro-btn" data-filtro="participa" onclick="setFiltro(this,'participa')">A Participar</button>
-    <button class="filtro-btn" data-filtro="criados" onclick="setFiltro(this,'criados')">Criados por mim</button>
+    <button class="filtro-btn" data-filtro="participa" onclick="toggleFiltro(this,'participa')">A Participar</button>
+    <button class="filtro-btn" data-filtro="criados" onclick="toggleFiltro(this,'criados')">Criados por mim</button>
     <?php endif; ?>
-    <button class="filtro-btn" data-filtro="ordem_pop" onclick="setFiltro(this,'ordem_pop')">Mais populares</button>
-    <button class="filtro-btn" data-filtro="ordem_data" onclick="setFiltro(this,'ordem_data')">Mais recentes</button>
+    <button class="ordem-btn ativo" data-ordem="pop" onclick="setOrdem(this,'pop')">Mais populares</button>
+    <button class="ordem-btn" data-ordem="data" onclick="setOrdem(this,'data')">Mais recentes</button>
+
+    <div class="distrito-dropdown" id="distritoDropdown">
+      <button type="button" class="filtro-btn distrito-toggle" onclick="toggleDistritoDropdown()">
+        📍 Distrito <span id="distritoResumo">(Todos)</span> <span class="seta">▾</span>
+      </button>
+      <div class="distrito-painel" id="distritoPainel">
+        <label class="distrito-opcao todos">
+          <input type="checkbox" id="chkDistritoTodos" checked onclick="toggleDistritoTodos()"> Todos
+        </label>
+        <?php foreach($distritos_portugal as $d): ?>
+          <label class="distrito-opcao">
+            <input type="checkbox" data-distrito="<?php echo htmlspecialchars($d); ?>" onclick="toggleDistrito(this,'<?php echo htmlspecialchars($d); ?>')"> <?php echo htmlspecialchars($d); ?>
+          </label>
+        <?php endforeach; ?>
+      </div>
+    </div>
   </div>
 
   <!-- Contagem -->
@@ -104,6 +125,7 @@ if ($utilizador_logado) {
            data-participa="<?php echo $participa?'1':'0'; ?>"
            data-nome="<?php echo strtolower(htmlspecialchars($ev['nome'])); ?>"
            data-local="<?php echo strtolower(htmlspecialchars($ev['local_evento'])); ?>"
+           data-distrito="<?php echo htmlspecialchars($ev['local_evento']); ?>"
            data-participantes="<?php echo $ev['total_participantes']; ?>"
            data-data="<?php echo $ev['data_criacao']; ?>"
            onclick="abrirModal(<?php echo $eid; ?>)">
@@ -148,8 +170,13 @@ if ($utilizador_logado) {
     <div class="modal-body">
       <div class="modal-top-row">
         <div class="modal-image-col">
-          <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
-          <div id="modalSemImagem" class="modal-sem-imagem" style="display:none">📅</div>
+          <div class="modal-imagem-wrapper">
+            <img id="modalImagem" class="modal-image" style="display:none" src="" alt="">
+            <div id="modalSemImagem" class="modal-sem-imagem" style="display:none">📅</div>
+            <button type="button" class="modal-img-nav prev" id="modalImgPrev" onclick="modalImgMudar(-1)" style="display:none">❮</button>
+            <button type="button" class="modal-img-nav next" id="modalImgNext" onclick="modalImgMudar(1)" style="display:none">❯</button>
+          </div>
+          <div class="modal-img-dots" id="modalImgDots"></div>
         </div>
         <div class="modal-info-col">
           <div class="modal-criador">
@@ -160,9 +187,11 @@ if ($utilizador_logado) {
               <small id="modalCriadorContacto" class="modal-criador-contacto"></small>
             </div>
           </div>
+          <div class="modal-description">
+            <p id="modalDescricao"></p>
+          </div>
           <div class="modal-info">
             <div class="modal-info-item">
-              <span class="icon">📅</span><span class="label">Data:</span>
               <span class="value" id="modalData"></span>
             </div>
             <div class="modal-info-item">
@@ -172,10 +201,6 @@ if ($utilizador_logado) {
           </div>
           <div class="participantes-count">
             <span>👥</span><span id="modalParticipantes"></span>
-          </div>
-          <div class="modal-description">
-            <h3>📝 Descrição</h3>
-            <p id="modalDescricao"></p>
           </div>
         </div>
       </div>
@@ -243,8 +268,10 @@ const userFotoUrl = null, userInicial = '', userNome = '';
 // ===== PAGINAÇÃO E FILTROS =====
 const POR_PAGINA = 9; // 3 linhas de 3
 let paginaAtual  = 1;
-let filtroAtivo  = 'todos';
 let pesquisa     = '';
+let statusAtivos = new Set();
+let distritosAtivos = new Set();
+let ordem = 'pop';
 
 function getCardsFiltrados() {
   const todos = Array.from(document.querySelectorAll('.evento-card'));
@@ -253,9 +280,18 @@ function getCardsFiltrados() {
     const local = card.dataset.local || '';
     const match = nome.includes(pesquisa) || local.includes(pesquisa);
     if (!match) return false;
-    if (filtroAtivo === 'todos' || filtroAtivo === 'ordem_pop' || filtroAtivo === 'ordem_data') return true;
-    if (filtroAtivo === 'participa') return card.dataset.participa === '1';
-    if (filtroAtivo === 'criados')   return parseInt(card.dataset.criador) === utilizadorId;
+
+    if (statusAtivos.size > 0) {
+      let statusMatch = false;
+      if (statusAtivos.has('participa') && card.dataset.participa === '1') statusMatch = true;
+      if (statusAtivos.has('criados')   && parseInt(card.dataset.criador) === utilizadorId) statusMatch = true;
+      if (!statusMatch) return false;
+    }
+
+    if (distritosAtivos.size > 0) {
+      if (!distritosAtivos.has(card.dataset.distrito)) return false;
+    }
+
     return true;
   });
 }
@@ -264,9 +300,9 @@ function renderPagina() {
   const todos = getCardsFiltrados();
 
   // Ordenação
-  if (filtroAtivo === 'ordem_pop') {
+  if (ordem === 'pop') {
     todos.sort((a,b) => parseInt(b.dataset.participantes) - parseInt(a.dataset.participantes));
-  } else if (filtroAtivo === 'ordem_data') {
+  } else if (ordem === 'data') {
     todos.sort((a,b) => new Date(b.dataset.data) - new Date(a.dataset.data));
   }
 
@@ -321,10 +357,68 @@ function irPagina(n) {
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-function setFiltro(btn, filtro) {
-  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
+function toggleFiltro(btn, filtro) {
+  if (statusAtivos.has(filtro)) {
+    statusAtivos.delete(filtro);
+    btn.classList.remove('ativo');
+  } else {
+    statusAtivos.add(filtro);
+    btn.classList.add('ativo');
+  }
+  document.querySelector('.filtro-btn[data-filtro="todos"]').classList.toggle('ativo', statusAtivos.size === 0);
+  paginaAtual = 1;
+  renderPagina();
+}
+
+function toggleFiltroTodos() {
+  statusAtivos.clear();
+  document.querySelectorAll('.filtro-btn[data-filtro]').forEach(b => b.classList.remove('ativo'));
+  document.querySelector('.filtro-btn[data-filtro="todos"]').classList.add('ativo');
+  paginaAtual = 1;
+  renderPagina();
+}
+
+function toggleDistrito(chk, distrito) {
+  if (distritosAtivos.has(distrito)) {
+    distritosAtivos.delete(distrito);
+  } else {
+    distritosAtivos.add(distrito);
+  }
+  document.getElementById('chkDistritoTodos').checked = distritosAtivos.size === 0;
+  atualizarResumoDistrito();
+  paginaAtual = 1;
+  renderPagina();
+}
+
+function toggleDistritoTodos() {
+  distritosAtivos.clear();
+  document.querySelectorAll('.distrito-painel input[data-distrito]').forEach(c => c.checked = false);
+  document.getElementById('chkDistritoTodos').checked = true;
+  atualizarResumoDistrito();
+  paginaAtual = 1;
+  renderPagina();
+}
+
+function atualizarResumoDistrito() {
+  const el = document.getElementById('distritoResumo');
+  el.textContent = distritosAtivos.size === 0 ? '(Todos)' : '(' + distritosAtivos.size + ')';
+}
+
+function toggleDistritoDropdown() {
+  document.getElementById('distritoPainel').classList.toggle('aberto');
+}
+
+document.addEventListener('click', function(e){
+  const dd = document.getElementById('distritoDropdown');
+  if (dd && !dd.contains(e.target)) {
+    document.getElementById('distritoPainel').classList.remove('aberto');
+  }
+});
+
+function setOrdem(btn, o) {
+  document.querySelectorAll('.ordem-btn').forEach(b => b.classList.remove('ativo'));
   btn.classList.add('ativo');
-  filtroAtivo = filtro;
+  ordem = o;
   paginaAtual = 1;
   renderPagina();
 }
@@ -382,6 +476,64 @@ function toggleParticiparCard(eid, btn) {
 
 // ===== MODAL =====
 let eventoAtual = null;
+let modalImagens = [];
+let modalImgIndex = 0;
+
+function montarImagensModal(evento){
+  let imagens=[];
+  if(evento.imagem) imagens.push(evento.imagem);
+  if(evento.imagens_extras){
+    try{
+      const extras = typeof evento.imagens_extras === 'string' ? JSON.parse(evento.imagens_extras) : evento.imagens_extras;
+      if(Array.isArray(extras)) imagens = imagens.concat(extras);
+    }catch(e){}
+  }
+  modalImagens = imagens.slice(0,5);
+  modalImgIndex = 0;
+  atualizarImagemModal();
+}
+
+function atualizarImagemModal(){
+  const imgEl    = document.getElementById('modalImagem');
+  const semImgEl = document.getElementById('modalSemImagem');
+  const prevBtn  = document.getElementById('modalImgPrev');
+  const nextBtn  = document.getElementById('modalImgNext');
+  const dotsEl   = document.getElementById('modalImgDots');
+
+  if(modalImagens.length===0){
+    imgEl.style.display='none';
+    semImgEl.style.display='flex';
+    prevBtn.style.display='none';
+    nextBtn.style.display='none';
+    dotsEl.innerHTML='';
+    return;
+  }
+
+  semImgEl.style.display='none';
+  imgEl.style.display='block';
+  imgEl.src='uploads/eventos/'+modalImagens[modalImgIndex];
+
+  const temVarias = modalImagens.length>1;
+  prevBtn.style.display = temVarias?'flex':'none';
+  nextBtn.style.display = temVarias?'flex':'none';
+
+  dotsEl.innerHTML='';
+  if(temVarias){
+    modalImagens.forEach((_,i)=>{
+      const dot=document.createElement('button');
+      dot.type='button';
+      dot.className='modal-img-dot'+(i===modalImgIndex?' ativo':'');
+      dot.onclick=()=>{modalImgIndex=i;atualizarImagemModal();};
+      dotsEl.appendChild(dot);
+    });
+  }
+}
+
+function modalImgMudar(delta){
+  if(modalImagens.length===0)return;
+  modalImgIndex=(modalImgIndex+delta+modalImagens.length)%modalImagens.length;
+  atualizarImagemModal();
+}
 
 function abrirModal(eid) {
   eventoAtual = eventosData.find(e => e.evento_id == eid);
@@ -396,16 +548,7 @@ function abrirModal(eid) {
   document.getElementById('modalDescricao').textContent = eventoAtual.descricao;
   const total = parseInt(eventoAtual.total_participantes);
   document.getElementById('modalParticipantes').textContent = total===1?'1 participante':total+' participantes';
-  const imgEl = document.getElementById('modalImagem');
-  const semImgEl = document.getElementById('modalSemImagem');
-  if (eventoAtual.imagem){
-    imgEl.src='uploads/eventos/'+eventoAtual.imagem;
-    imgEl.style.display='block';
-    semImgEl.style.display='none';
-  } else {
-    imgEl.style.display='none';
-    semImgEl.style.display='flex';
-  }
+  montarImagensModal(eventoAtual);
   const fotoDiv = document.getElementById('modalCriadorFoto');
   if (eventoAtual.criador_foto){
     fotoDiv.innerHTML=`<img src="uploads/perfil/${eventoAtual.criador_foto}" class="modal-criador-foto" onerror="this.outerHTML='<div class=modal-criador-placeholder>${eventoAtual.criador_nome.charAt(0).toUpperCase()}</div>'">`;
