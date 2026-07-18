@@ -58,6 +58,7 @@ if ($utilizador_logado) {
               <?php else: ?>
                 <div class="user-placeholder-mini"><?php echo strtoupper(substr($u['nome'],0,1)); ?></div>
               <?php endif; ?>
+              <span class="user-nome-header"><?php echo htmlspecialchars($u['nome']); ?></span>
             </button>
             <div class="perfil-dropdown-menu" id="perfilDropdownMenu">
               <a href="perfil.php">⚙️ Definições</a>
@@ -77,9 +78,7 @@ if ($utilizador_logado) {
       </nav>
 
       <div class="header-right">
-        <?php if($utilizador_logado): ?>
-          <a href="logout.php" class="btn-sair">Sair</a>
-        <?php else: ?>
+        <?php if(!$utilizador_logado): ?>
           <a href="login.php" class="btn-login">Login</a>
         <?php endif; ?>
       </div>

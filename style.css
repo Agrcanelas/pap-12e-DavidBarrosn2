@@ -71,10 +71,13 @@ a.usuario-logado,
   transition: all .3s;
 }
 
-a.usuario-logado:hover {
+a.usuario-logado:hover,
+button.usuario-logado:hover {
   box-shadow: 0 4px 12px rgba(88,183,157,0.3);
   transform: translateY(-1px);
 }
+
+.user-nome-header { color: #58b79d; font-weight: bold; }
 
 .user-foto-mini {
   width: 30px; height: 30px;

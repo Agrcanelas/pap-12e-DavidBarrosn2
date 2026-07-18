@@ -362,22 +362,20 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
           </div>
         </div>
 
-        <!-- COLUNA CENTRAL: Título + Email + Telefone + Botão -->
+        <!-- COLUNA CENTRAL: Título + Palavra-passe + Email + Botão -->
         <div class="registo-col-central">
           <h2>Criar Conta</h2>
+
+          <div class="form-group" style="text-align:left;">
+            <label for="password">Palavra-passe</label>
+            <input type="password" id="password" name="password" placeholder="Crie uma palavra-passe" required>
+          </div>
 
           <div class="form-group" style="text-align:left;">
             <label for="email">Email</label>
             <input type="text" id="email" name="email" placeholder="exemplo@gmail.com" required
                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
             <span class="campo-hint">Apenas emails @gmail.com ou @yahoo.com</span>
-          </div>
-
-          <div class="form-group" style="text-align:left;">
-            <label for="telefone">Número de Telemóvel <span style="color:#999; font-weight:normal;">(opcional)</span></label>
-            <input type="tel" id="telefone" name="telefone" placeholder="912345678"
-                   value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>"
-                   oninput="atualizarMetodoContacto()">
           </div>
 
           <button type="submit" class="btn-submit">Registar</button>
@@ -387,8 +385,15 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
           </div>
         </div>
 
-        <!-- COLUNA DIREITA: Forma de contacto + Palavra-passe -->
+        <!-- COLUNA DIREITA: Telefone + Forma de contacto -->
         <div class="registo-col-direita">
+          <div class="form-group">
+            <label for="telefone">Número de Telemóvel <span style="color:#999; font-weight:normal;">(opcional)</span></label>
+            <input type="tel" id="telefone" name="telefone" placeholder="912345678"
+                   value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>"
+                   oninput="atualizarMetodoContacto()">
+          </div>
+
           <div class="form-group">
             <label for="metodo_contacto">Forma de contacto preferida</label>
             <select id="metodo_contacto" name="metodo_contacto">
@@ -396,11 +401,6 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
               <option value="telefone" id="opcao_telefone" disabled>Telemóvel</option>
             </select>
             <span class="campo-hint" id="hint_contacto">Sem telemóvel indicado, só pode escolher o email.</span>
-          </div>
-
-          <div class="form-group">
-            <label for="password">Palavra-passe</label>
-            <input type="password" id="password" name="password" placeholder="Crie uma palavra-passe" required>
           </div>
         </div>
 

@@ -13,6 +13,7 @@
               <?php else: ?>
                 <div class="user-placeholder-mini"><?php echo strtoupper(substr($u['nome'], 0, 1)); ?></div>
               <?php endif; ?>
+              <span class="user-nome-header"><?php echo htmlspecialchars($u['nome']); ?></span>
             </button>
             <div class="perfil-dropdown-menu" id="perfilDropdownMenu">
               <a href="perfil.php">⚙️ Definições</a>
@@ -32,9 +33,7 @@
       </nav>
 
       <div class="header-right">
-        <?php if(isset($_SESSION['user'])): ?>
-          <a href="logout.php" class="btn-sair">Sair</a>
-        <?php else: ?>
+        <?php if(!isset($_SESSION['user'])): ?>
           <a href="login.php" class="btn-login">Login</a>
         <?php endif; ?>
       </div>
