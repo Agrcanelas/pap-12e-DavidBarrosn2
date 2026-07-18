@@ -142,17 +142,42 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
   margin-top: 20px;
 }
 
-.registo-colunas {
+.registo-grid {
   display: grid;
   grid-template-columns: 1fr 1.3fr 1fr;
-  gap: 40px;
+  grid-template-areas:
+    "titulo  titulo  titulo"
+    "foto    senha   tel"
+    "foto    email   contacto"
+    "nome    .       ."
+    ".       botao   .";
+  column-gap: 40px;
+  row-gap: 20px;
   align-items: start;
 }
 
-.registo-col-central { text-align: center; }
+.reg-titulo   { grid-area: titulo; text-align: center; margin-bottom: 6px; }
+.reg-foto     { grid-area: foto; }
+.reg-senha    { grid-area: senha; }
+.reg-tel      { grid-area: tel; }
+.reg-nome     { grid-area: nome; }
+.reg-email    { grid-area: email; }
+.reg-contacto { grid-area: contacto; }
+.reg-botao    { grid-area: botao; text-align: center; }
 
 @media (max-width: 900px) {
-  .registo-colunas { grid-template-columns: 1fr; }
+  .registo-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "titulo"
+      "foto"
+      "nome"
+      "senha"
+      "email"
+      "tel"
+      "contacto"
+      "botao";
+  }
 }
 
 .login-box h2 {
@@ -340,67 +365,62 @@ body { display: flex; flex-direction: column; min-height: 100vh; }
     <?php endif; ?>
 
     <form method="POST" action="" enctype="multipart/form-data">
-      <div class="registo-colunas">
+      <div class="registo-grid">
 
-        <!-- COLUNA ESQUERDA: Foto + Nome -->
-        <div class="registo-col-esquerda">
-          <div class="form-group">
-            <label>Foto de Perfil <span style="color:#999; font-weight:normal;">(opcional)</span></label>
-            <div class="foto-upload-area" onclick="document.getElementById('foto_perfil').click()">
-              <div class="foto-placeholder" id="foto-placeholder">👤</div>
-              <img id="preview-img" src="" alt="Preview da foto">
-              <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" onchange="previewFoto(this)">
-              <button type="button" class="btn-escolher-foto">📷 Escolher Foto</button>
-              <span class="foto-hint">JPG, PNG ou GIF · Máx. 5MB</span>
-            </div>
-          </div>
+        <h2 class="reg-titulo">Criar Conta</h2>
 
-          <div class="form-group">
-            <label for="nome">Nome</label>
-            <input type="text" id="nome" name="nome" placeholder="O seu nome completo" required
-                   value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>">
+        <!-- Linha 1: Foto | Palavra-passe | Telefone -->
+        <div class="form-group reg-foto">
+          <label>Foto de Perfil <span style="color:#999; font-weight:normal;">(opcional)</span></label>
+          <div class="foto-upload-area" onclick="document.getElementById('foto_perfil').click()">
+            <div class="foto-placeholder" id="foto-placeholder">👤</div>
+            <img id="preview-img" src="" alt="Preview da foto">
+            <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" onchange="previewFoto(this)">
+            <button type="button" class="btn-escolher-foto">📷 Escolher Foto</button>
+            <span class="foto-hint">JPG, PNG ou GIF · Máx. 5MB</span>
           </div>
         </div>
 
-        <!-- COLUNA CENTRAL: Título + Palavra-passe + Email + Botão -->
-        <div class="registo-col-central">
-          <h2>Criar Conta</h2>
+        <div class="form-group reg-senha" style="text-align:left;">
+          <label for="password">Palavra-passe</label>
+          <input type="password" id="password" name="password" placeholder="Crie uma palavra-passe" required>
+        </div>
 
-          <div class="form-group" style="text-align:left;">
-            <label for="password">Palavra-passe</label>
-            <input type="password" id="password" name="password" placeholder="Crie uma palavra-passe" required>
-          </div>
+        <div class="form-group reg-tel">
+          <label for="telefone">Número de Telemóvel <span style="color:#999; font-weight:normal;">(opcional)</span></label>
+          <input type="tel" id="telefone" name="telefone" placeholder="912345678"
+                 value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>"
+                 oninput="atualizarMetodoContacto()">
+        </div>
 
-          <div class="form-group" style="text-align:left;">
-            <label for="email">Email</label>
-            <input type="text" id="email" name="email" placeholder="exemplo@gmail.com" required
-                   value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
-            <span class="campo-hint">Apenas emails @gmail.com ou @yahoo.com</span>
-          </div>
+        <!-- Linha 2: Email | Forma de contacto (foto continua a ocupar a coluna esquerda) -->
+        <div class="form-group reg-email" style="text-align:left;">
+          <label for="email">Email</label>
+          <input type="text" id="email" name="email" placeholder="exemplo@gmail.com" required
+                 value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+          <span class="campo-hint">Apenas emails @gmail.com ou @yahoo.com</span>
+        </div>
 
+        <div class="form-group reg-contacto">
+          <label for="metodo_contacto">Forma de contacto preferida</label>
+          <select id="metodo_contacto" name="metodo_contacto">
+            <option value="email" selected>Email</option>
+            <option value="telefone" id="opcao_telefone" disabled>Telemóvel</option>
+          </select>
+          <span class="campo-hint" id="hint_contacto">Sem telemóvel indicado, só pode escolher o email.</span>
+        </div>
+
+        <!-- Linha 3: Nome | Botão -->
+        <div class="form-group reg-nome">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" placeholder="O seu nome completo" required
+                 value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>">
+        </div>
+
+        <div class="reg-botao">
           <button type="submit" class="btn-submit">Registar</button>
-
           <div class="extra-links">
             <p>Já tem conta? <a href="login.php">Fazer login</a></p>
-          </div>
-        </div>
-
-        <!-- COLUNA DIREITA: Telefone + Forma de contacto -->
-        <div class="registo-col-direita">
-          <div class="form-group">
-            <label for="telefone">Número de Telemóvel <span style="color:#999; font-weight:normal;">(opcional)</span></label>
-            <input type="tel" id="telefone" name="telefone" placeholder="912345678"
-                   value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>"
-                   oninput="atualizarMetodoContacto()">
-          </div>
-
-          <div class="form-group">
-            <label for="metodo_contacto">Forma de contacto preferida</label>
-            <select id="metodo_contacto" name="metodo_contacto">
-              <option value="email" selected>Email</option>
-              <option value="telefone" id="opcao_telefone" disabled>Telemóvel</option>
-            </select>
-            <span class="campo-hint" id="hint_contacto">Sem telemóvel indicado, só pode escolher o email.</span>
           </div>
         </div>
 
