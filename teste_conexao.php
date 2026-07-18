@@ -71,7 +71,7 @@ if (in_array('evento', $tabelasEncontradas)) {
         $stmt = $pdo->query("DESCRIBE evento");
         $colunas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        $colunasNecessarias = ['evento_id', 'nome', 'descricao', 'data_evento', 'local_evento', 'imagem', 'utilizador_id'];
+        $colunasNecessarias = ['evento_id', 'nome', 'descricao', 'data_inicio', 'hora_inicio', 'data_fim', 'hora_fim', 'local_evento', 'vagas', 'imagem', 'imagens_extras', 'utilizador_id', 'data_criacao'];
         $colunasEncontradas = array_column($colunas, 'Field');
         
         echo "<table>";
@@ -91,10 +91,48 @@ if (in_array('evento', $tabelasEncontradas)) {
             if (in_array($coluna, $colunasEncontradas)) {
                 echo "<div class='ok'>✅ Coluna <strong>$coluna</strong> existe</div>";
             } else {
-                echo "<div class='erro'>❌ Coluna <strong>$coluna</strong> NÃO existe! A estrutura está incorreta.</div>";
+                echo "<div class='erro'>❌ Coluna <strong>$coluna</strong> NÃO existe! Execute a migração correspondente.</div>";
             }
         }
         
+    } catch (PDOException $e) {
+        echo "<div class='erro'>❌ Erro ao verificar estrutura: " . $e->getMessage() . "</div>";
+    }
+}
+
+// 4b. Verificar estrutura da tabela UTILIZADOR
+if (in_array('utilizador', $tabelasEncontradas)) {
+    echo "<h2>4️⃣🅱️ Verificar estrutura da tabela UTILIZADOR</h2>";
+    try {
+        $stmt = $pdo->query("DESCRIBE utilizador");
+        $colunas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $colunasNecessarias = ['utilizador_id', 'nome', 'email', 'foto_perfil', 'senha', 'telefone', 'metodo_contacto', 'descricao', 'data_registo'];
+        $colunasEncontradas = array_column($colunas, 'Field');
+
+        echo "<table>";
+        echo "<tr><th>Coluna</th><th>Tipo</th><th>Null</th><th>Chave</th><th>Default</th></tr>";
+        foreach ($colunas as $col) {
+            echo "<tr>";
+            echo "<td>{$col['Field']}</td>";
+            echo "<td>{$col['Type']}</td>";
+            echo "<td>{$col['Null']}</td>";
+            echo "<td>{$col['Key']}</td>";
+            echo "<td>{$col['Default']}</td>";
+            echo "</tr>";
+        }
+        echo "</table>";
+
+        foreach ($colunasNecessarias as $coluna) {
+            if (in_array($coluna, $colunasEncontradas)) {
+                echo "<div class='ok'>✅ Coluna <strong>$coluna</strong> existe</div>";
+            } else {
+                $migracao = ($coluna === 'metodo_contacto' || $coluna === 'telefone') ? 'migracao_metodo_contacto.sql' : (($coluna === 'descricao') ? 'migracao_descricao_perfil.sql' : '');
+                $sugestao = $migracao ? " Execute o ficheiro <strong>$migracao</strong> no phpMyAdmin." : " A estrutura está incorreta.";
+                echo "<div class='erro'>❌ Coluna <strong>$coluna</strong> NÃO existe!$sugestao</div>";
+            }
+        }
+
     } catch (PDOException $e) {
         echo "<div class='erro'>❌ Erro ao verificar estrutura: " . $e->getMessage() . "</div>";
     }

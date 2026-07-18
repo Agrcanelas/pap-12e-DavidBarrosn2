@@ -30,13 +30,12 @@
         <a href="index.php#envolva">Envolva-se</a>
         <a href="index.php#criar-evento">Criar Evento</a>
         <a href="eventos.php">Eventos</a>
-      </nav>
-
-      <div class="header-right">
         <?php if(!isset($_SESSION['user'])): ?>
           <a href="login.php" class="btn-login">Login</a>
         <?php endif; ?>
-      </div>
+      </nav>
+
+      <div class="header-right"></div>
     </div>
   </div>
 </header>

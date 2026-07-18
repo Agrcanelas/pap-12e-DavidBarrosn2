@@ -75,13 +75,12 @@ if ($utilizador_logado) {
         <a href="index.php#envolva">Envolva-se</a>
         <a href="index.php#criar-evento">Criar Evento</a>
         <a href="eventos.php" class="btn-login">Eventos</a>
-      </nav>
-
-      <div class="header-right">
         <?php if(!$utilizador_logado): ?>
           <a href="login.php" class="btn-login">Login</a>
         <?php endif; ?>
-      </div>
+      </nav>
+
+      <div class="header-right"></div>
     </div>
   </div>
 </header>
